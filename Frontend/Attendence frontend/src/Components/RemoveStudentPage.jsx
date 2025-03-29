@@ -1,25 +1,15 @@
-import '../CSS/RegisterPage.css'
 
-
-function RegisterPage(){
+function RemoveStudentPage(){
 
     return(
         <div >
-            <h1>Register Student</h1>
+            <h1>Remove Student</h1>
                 <form>
                     <label>Student Name:</label>
                     <input type="text" name="username" required/>
                     <br />
                     <label>Student ID:</label>
                     <input type="text" name="studentid" required/>
-                    <br />
-                    <label>Intake:</label>
-                    <select >
-                        <option value="39">Intake 39</option>
-                        <option value="40">Intake 40</option>
-                        <option value="41">Intake 41</option>
-                        <option value="42">Intake 42</option>
-                    </select>
                     <br />
                     <label>Course:</label>
                     <select >
@@ -31,12 +21,12 @@ function RegisterPage(){
                         <option value="course3">Information Systems</option>
                     </select>
                     <br />
+                    <button type="submit">Remove</button>
+                    <button type="reset">Clear</button>
                 </form>
-                <button type="submit">Register</button> 
-                <button type="reset">Clear</button>
         </div>
     )
 
 }
 
-export default RegisterPage;
+export default RemoveStudentPage;
