@@ -1,10 +1,13 @@
 import React, { useEffect, useRef } from 'react'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+
 
 function CapturePage() {
 
   const videoRef = useRef(null)
   const [capturedImages, setCapturedImages] = useState([])
+  const navigate = useNavigate()
 
 
   const captureImages = async () => {
@@ -27,6 +30,8 @@ function CapturePage() {
     setCapturedImages(images)
     localStorage.setItem('capturedPhotos', JSON.stringify(images)) // send to RegisterPage
     alert("✅ 30 photos captured successfully!")
+    navigate('/registerpage') 
+
   }
   
 
