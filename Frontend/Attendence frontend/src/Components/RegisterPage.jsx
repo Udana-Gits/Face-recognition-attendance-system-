@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import '../CSS/RegisterPage.css'
 import { useNavigate } from 'react-router-dom'
 import React, { useEffect, useRef } from 'react'
+
+import '../CSS/RegisterPage.css'
 
 
 

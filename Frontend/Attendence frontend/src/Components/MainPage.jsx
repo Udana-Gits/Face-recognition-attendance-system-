@@ -25,18 +25,18 @@ function MainPage() {
         <div className="left-pane">
           <img src={leftbackground} alt="" height='100%' width='100%' />
         </div>
-      <div className="right-pane">
-        <h1>Attendance Management System</h1>
-        <br />
-        <button onClick={attendencepage}>Take Attendence</button>
-        <br />
-        <button onClick={regsiterPage}>Regsiter Students</button>
-        <br />
-        <button onClick={removestudentpage}>Remove Students</button>
-        <br />
-        <button onClick={attendencepage}>Manage Attendence</button>            
+        <div className="right-pane">
+          <h1>Attendance Management System</h1>
+          <br />
+          <button onClick={attendencepage}>Take Attendence</button>
+          <br />
+          <button onClick={regsiterPage}>Regsiter Students</button>
+          <br />
+          <button onClick={removestudentpage}>Remove Students</button>
+          <br />
+          <button onClick={attendencepage}>Manage Attendence</button>            
+        </div>
       </div>
-    </div>
     </>
   )
 }

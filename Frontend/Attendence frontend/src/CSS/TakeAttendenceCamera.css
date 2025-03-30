@@ -1,0 +1,35 @@
+.split-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two equal columns */
+    height: 100vh;
+  }
+  
+  
+  .left-pane {
+    flex: 1; /* Takes 50% */
+    padding: 20px;
+  }
+  
+  .right-pane {
+    flex: 1; /* Takes other 50% */
+    padding: 20px;
+  }
+  
+  .attendence_table {
+    width: 80%;                     /* Edit width as needed */
+    margin: 20px auto;              /* Center the table horizontally */
+    border-collapse: collapse;      /* Remove space between borders */
+    text-align: center;             /* Center-align text */
+    border: 2px solid white;        /* Outer border */
+  }
+  
+  .attendence_table th,
+  .attendence_table td {
+    border: 1px solid white;        /* Inner borders */
+    padding: 10px 15px;
+  }
+  
+  .attendence_table th {
+    font-weight: bold;
+  }
+  
