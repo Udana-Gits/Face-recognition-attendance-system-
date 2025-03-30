@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import '../CSS/RegisterPage.css'
 import { useNavigate } from 'react-router-dom'
+import React, { useEffect, useRef } from 'react'
+
 
 
 
@@ -15,43 +17,79 @@ function RegisterPage(){
         course: ''
       })
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value })
-    }  
+      useEffect(() => {
+        const savedForm = JSON.parse(localStorage.getItem('studentFormData'))
+        if (savedForm) {
+          setFormData(savedForm)
+        }
+      }, [])
+
+      const handleChange = (e) => {
+        const updatedForm = { ...formData, [e.target.name]: e.target.value }
+        setFormData(updatedForm)
+        localStorage.setItem('studentFormData', JSON.stringify(updatedForm))
+      }
+        
+
+    
+
 
     const handleSubmit = async (e) => {
       e.preventDefault()
-
+    
+      const capturedPhotos = JSON.parse(localStorage.getItem('capturedPhotos') || '[]')
+    
+      // 🚫 Block registration if photos are missing or not exactly 30
+      if (capturedPhotos.length !== 30) {
+        alert("⚠️ Please capture 30 photos before registering.")
+        return
+      }
+    
       const payload = {
         ...formData,
         images: capturedPhotos
       }
-
+    
       try {
         const response = await fetch('http://localhost:5000/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         })
-
+    
         const result = await response.json()
-        alert(result.message)
+    
+        if (response.ok) {
+          // ✅ Clear photos and reload the form
+          localStorage.removeItem('studentFormData')      // 🧼 clear saved form
+          localStorage.removeItem('capturedPhotos')       // 🧼 clear captured photos
+          alert(result.message)
+          window.location.reload()
+        } else {
+          alert(result.message)
+        }
+    
       } catch (error) {
         console.error('Error:', error)
-        alert('Something went wrong!')
+        alert('Something went wrong during registration!')
       }
     }
+    
 
     
 
-      const handleReset = () => {
-        setFormData({
-          name: '',
-          studentid: '',
-          intake: '',
-          course: ''
-        })
-      }
+    const handleReset = () => {
+      setFormData({
+        name: '',
+        studentid: '',
+        intake: '',
+        course: ''
+      })
+      localStorage.removeItem('studentFormData')      // 🧼 clear saved form
+      localStorage.removeItem('capturedPhotos')       // 🧼 clear captured photos
+    }
+    
+    
 
       function handleCapture(){
         Navigate('/capturepage')
@@ -71,6 +109,7 @@ function RegisterPage(){
                     <br />
                     <label>Intake:</label>
                     <select name="intake" value={formData.intake} onChange={handleChange} required >
+                        <option value="">-- Select Intake --</option>
                         <option value="Intake 39">Intake 39</option>
                         <option value="Intake 40">Intake 40</option>
                         <option value="Intake 41">Intake 41</option>
