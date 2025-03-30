@@ -1,28 +1,86 @@
+import { useState } from 'react'
 
 function RemoveStudentPage(){
+
+    const [formData, setFormData] = useState({
+        name: '',
+        studentid: '',
+        intake: '',
+        course: ''
+      })
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value })
+    } 
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        console.log("Sending data:", formData)
+      
+        try {
+          const response = await fetch('http://localhost:5000/remove-student', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+          })
+      
+          const result = await response.json()
+          
+          if (response.ok) {
+            alert(result.message) // Success message
+          } else {
+            alert(result.message) // Error from Flask
+          }
+      
+        } catch (error) {
+          console.error('Error:', error)
+          alert('Something went wrong!')
+        }
+      }
+      
+  
+        const handleReset = () => {
+          setFormData({
+            name: '',
+            studentid: '',
+            intake: '',
+            course: ''
+          })
+        }
+
 
     return(
         <div >
             <h1>Remove Student</h1>
-                <form>
+                <form onSubmit={handleSubmit}>
                     <label>Student Name:</label>
-                    <input type="text" name="username" required/>
+                    <input type="text" name="name" value={formData.name} onChange={handleChange} required/>
                     <br />
                     <label>Student ID:</label>
-                    <input type="text" name="studentid" required/>
+                    <input type="text" name="studentid" value={formData.studentid} onChange={handleChange} required/>
+                    <br />
+                    <label>Intake:</label>
+                    <select name="intake" value={formData.intake} onChange={handleChange} required >
+                        <option value="Intake 39">Intake 39</option>
+                        <option value="Intake 40">Intake 40</option>
+                        <option value="Intake 41">Intake 41</option>
+                        <option value="Intake 42">Intake 42</option>
+                    </select>
                     <br />
                     <label>Course:</label>
-                    <select >
-                        <option value="course1">Computer Science</option>
-                        <option value="course2">Software Engeneering</option>
-                        <option value="course3">Computer Engeneering</option>
-                        <option value="course2">Data Science and Business Analytics</option>
-                        <option value="course3">Information Technology</option>
-                        <option value="course3">Information Systems</option>
+                    <label>Course:</label>
+                    <select name="course" value={formData.course} onChange={handleChange} required>
+                      <option value="">-- Select Course --</option>
+                      <option value="Computer Science">Computer Science</option>
+                      <option value="Software Engineering">Software Engineering</option>
+                      <option value="Computer Engineering">Computer Engineering</option>
+                      <option value="Data Science and Business Analytics">Data Science and Business Analytics</option>
+                      <option value="Information Technology">Information Technology</option>
+                      <option value="Information Systems">Information Systems</option>
                     </select>
                     <br />
                     <button type="submit">Remove</button>
-                    <button type="reset">Clear</button>
+                    <button type="reset" onClick={handleReset}>Clear</button>
                 </form>
         </div>
     )

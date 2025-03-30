@@ -4,6 +4,7 @@ import MainPage from './Components/MainPage'
 import RegisterPage from './Components/RegisterPage'
 import AttendencePage from './Components/AttendencePage'
 import RemoveStudentPage from './Components/RemoveStudentPage'
+import CapturePage from './Components/CapturePage'
 
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path='/registerpage' element={<RegisterPage />} />
         <Route path='/attendencepage' element={<AttendencePage />} />
         <Route path='/removestudentpage' element={<RemoveStudentPage />} />
+        <Route path='/capturepage' element={<CapturePage />} />
       </Routes>
     </BrowserRouter>
   )
