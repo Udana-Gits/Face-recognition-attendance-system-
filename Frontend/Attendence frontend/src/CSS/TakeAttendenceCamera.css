@@ -33,3 +33,9 @@
     font-weight: bold;
   }
   
+  .camera_canvas{
+    position: relative;
+    width: 600px;
+    height: 480px; 
+    align-content: left;
+  }
