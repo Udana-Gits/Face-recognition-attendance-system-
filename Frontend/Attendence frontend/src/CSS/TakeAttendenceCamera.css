@@ -1,5 +1,4 @@
-/* TakeAttendenceCamera.css */
-
+/* Layout split between camera and attendance list */
 .split-container {
   display: flex;
   width: 100%;
@@ -9,15 +8,15 @@
   box-sizing: border-box;
 }
 
-/* Left side containing camera and controls */
+/* LEFT PANE - Camera + Buttons */
 .left-pane {
   display: flex;
   flex-direction: column;
-  width: 620px; /* Slightly wider than the camera to account for padding/borders */
+  width: 620px; /* Slightly wider than camera to fit buttons */
   height: 100%;
 }
 
-/* Camera container with proper positioning for video and canvas overlay */
+/* CAMERA AREA: Contains both video and canvas stacked */
 .camera_canvas {
   position: relative;
   width: 600px;
@@ -25,29 +24,33 @@
   margin-bottom: 20px;
   border: 2px solid #ccc;
   border-radius: 4px;
-  overflow: hidden; /* Keep canvas and video within bounds */
+  overflow: hidden;
   background-color: #000;
 }
 
+/* VIDEO: Full size, behind canvas */
 .camera_canvas video {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; /* Changed from cover to contain */
+  z-index: 1;
 }
 
+/* CANVAS: Transparent, drawn over video */
 .camera_canvas canvas {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 10; /* Place canvas above video for drawings */
+  z-index: 10;
+  pointer-events: none;
 }
 
-/* Control buttons container */
+/* Rest of the CSS remains the same */
 .control-buttons {
   display: flex;
   gap: 10px;
@@ -92,7 +95,7 @@
   background-color: #0b7dda;
 }
 
-/* Right side containing the attendance table */
+/* RIGHT PANE - Attendance List */
 .right-pane {
   flex: 1;
   display: flex;
@@ -115,7 +118,7 @@
   text-align: center;
 }
 
-/* Attendance table styles */
+/* ATTENDANCE TABLE */
 .attendence_table {
   width: 100%;
   border-collapse: collapse;
@@ -146,23 +149,23 @@
   background-color: #ddd;
 }
 
-/* Responsive adjustments */
+/* MOBILE / TABLET RESPONSIVE */
 @media (max-width: 1200px) {
   .split-container {
     flex-direction: column;
     height: auto;
   }
-  
+
   .left-pane {
     width: 100%;
     max-width: 620px;
     margin: 0 auto;
   }
-  
+
   .right-pane {
     width: 100%;
     max-width: 620px;
     margin: 20px auto 0;
-    height: 400px; /* Fixed height for table in mobile view */
+    height: 400px;
   }
 }
