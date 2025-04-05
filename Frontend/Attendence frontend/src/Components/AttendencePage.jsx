@@ -61,7 +61,13 @@ function AttendencePage(){
       
           if (response.ok) {
             alert(result.message)
-            navigate('/takeattendencecamera')
+            // Navigate to the camera page with the selected options
+            navigate('/takeattendencecamera', {
+              state: {
+                selectedOptionsIntake,
+                selectedOptionsCourse
+              }
+            });
           } else {
             alert("Failed to load embeddings.")
           }
@@ -78,7 +84,7 @@ function AttendencePage(){
             <h1>AttendencePage</h1>
             <form onSubmit={handleSubmit}>
             <div className="split-container_attendencepage">
-                <div className="left-pane">
+                <div className="left-paner_attendencepage">
                     <h4>Select Intake</h4>
                     <br />
                     <label>
@@ -98,7 +104,7 @@ function AttendencePage(){
                     </label>
                     <br /> 
                 </div>
-                <div className="right-pane">
+                <div className="right-paner_attendencepage">
                     <h4>Select Course</h4>
                     <br />
                     <label>

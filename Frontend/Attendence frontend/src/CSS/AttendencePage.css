@@ -5,13 +5,13 @@
   }
   
   
-  .left-pane{
+  .left-paner_attendencepage{
     flex: 1; /* Takes 50% */
     padding: 20px;
     
   }
   
-  .right-pane{
+  .right-paner_attendencepage{
     flex: 1; /* Takes other 50% */
     padding: 20px;
     
