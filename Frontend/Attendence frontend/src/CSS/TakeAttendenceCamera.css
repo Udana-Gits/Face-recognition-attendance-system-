@@ -1,35 +1,168 @@
+/* TakeAttendenceCamera.css */
+
 .split-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* Two equal columns */
-    height: 100vh;
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  gap: 20px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Left side containing camera and controls */
+.left-pane {
+  display: flex;
+  flex-direction: column;
+  width: 620px; /* Slightly wider than the camera to account for padding/borders */
+  height: 100%;
+}
+
+/* Camera container with proper positioning for video and canvas overlay */
+.camera_canvas {
+  position: relative;
+  width: 600px;
+  height: 480px;
+  margin-bottom: 20px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  overflow: hidden; /* Keep canvas and video within bounds */
+  background-color: #000;
+}
+
+.camera_canvas video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.camera_canvas canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10; /* Place canvas above video for drawings */
+}
+
+/* Control buttons container */
+.control-buttons {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.control-buttons button {
+  flex: 1;
+  padding: 12px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.control-buttons button:hover {
+  background-color: #45a049;
+}
+
+.control-buttons button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.control-buttons button:nth-child(2) {
+  background-color: #f44336;
+}
+
+.control-buttons button:nth-child(2):hover {
+  background-color: #d32f2f;
+}
+
+.control-buttons button:nth-child(3) {
+  background-color: #2196F3;
+}
+
+.control-buttons button:nth-child(3):hover {
+  background-color: #0b7dda;
+}
+
+/* Right side containing the attendance table */
+.right-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background-color: #f9f9f9;
+  overflow: hidden;
+}
+
+.right-pane h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #eee;
+  color: #333;
+  text-align: center;
+}
+
+/* Attendance table styles */
+.attendence_table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.attendence_table th {
+  background-color: #4CAF50;
+  color: white;
+  text-align: left;
+  padding: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.attendence_table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+.attendence_table tbody tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.attendence_table tbody tr:hover {
+  background-color: #ddd;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .split-container {
+    flex-direction: column;
+    height: auto;
   }
   
-  
   .left-pane {
-    flex: 1; /* Takes 50% */
-    padding: 20px;
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto;
   }
   
   .right-pane {
-    flex: 1; /* Takes other 50% */
-    padding: 20px;
+    width: 100%;
+    max-width: 620px;
+    margin: 20px auto 0;
+    height: 400px; /* Fixed height for table in mobile view */
   }
-  
-  .attendence_table {
-    width: 80%;                     /* Edit width as needed */
-    margin: 20px auto;              /* Center the table horizontally */
-    border-collapse: collapse;      /* Remove space between borders */
-    text-align: center;             /* Center-align text */
-    border: 2px solid white;        /* Outer border */
-  }
-  
-  .attendence_table th,
-  .attendence_table td {
-    border: 1px solid white;        /* Inner borders */
-    padding: 10px 15px;
-  }
-  
-  .attendence_table th {
-    font-weight: bold;
-  }
-  
+}

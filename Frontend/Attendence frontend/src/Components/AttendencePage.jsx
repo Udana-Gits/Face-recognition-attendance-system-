@@ -37,17 +37,54 @@ function AttendencePage(){
         setSelectedOptionsCourse([])
       }
 
-      const gotoAttendeCamera = () => {
-        navigate('/takeattendencecamera')
+      
+
+      const handleSubmit = async (e) => {
+        e.preventDefault()
+      
+        if (selectedOptionsIntake.length === 0 || selectedOptionsCourse.length === 0) {
+          alert("Please select at least one intake and one course.")
+          return
+        }
+      
+        try {
+          const response = await fetch('http://localhost:5000/load-embeddings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              intakes: selectedOptionsIntake,
+              courses: selectedOptionsCourse
+            })
+          })
+      
+          const result = await response.json()
+      
+          if (response.ok) {
+            alert(result.message)
+            // Navigate to the camera page with the selected options
+            navigate('/takeattendencecamera', {
+              state: {
+                selectedOptionsIntake,
+                selectedOptionsCourse
+              }
+            });
+          } else {
+            alert("Failed to load embeddings.")
+          }
+        } catch (error) {
+          console.error("Error sending selections:", error)
+          alert("Server error.")
+        }
       }
+      
       
 
     return(
         <div className="attendence-page">
             <h1>AttendencePage</h1>
-            <form>
+            <form onSubmit={handleSubmit}>
             <div className="split-container_attendencepage">
-                <div className="left-pane">
+                <div className="left-paner_attendencepage">
                     <h4>Select Intake</h4>
                     <br />
                     <label>
@@ -67,7 +104,7 @@ function AttendencePage(){
                     </label>
                     <br /> 
                 </div>
-                <div className="right-pane">
+                <div className="right-paner_attendencepage">
                     <h4>Select Course</h4>
                     <br />
                     <label>
@@ -96,7 +133,7 @@ function AttendencePage(){
                     <br />          
                 </div>
             </div>
-            <button type="submit" onClick={gotoAttendeCamera}>Take Attendence</button>
+            <button type="submit" >Take Attendence</button>
             <button type="reset" onClick={handleReset} >Clear</button>
         </form>
     </div>
