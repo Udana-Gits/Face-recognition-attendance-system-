@@ -8,7 +8,7 @@ html, body, #root {
   }
   
   /* Main container styles */
-  .register-student-container {
+  .remove-student-container {
     width: 100vw;
     min-height: 100vh;
     margin: 0;
@@ -32,7 +32,7 @@ html, body, #root {
   }
   
   /* Page header */
-  .register-student-title {
+  .remove-student-title {
     text-align: center;
     color: #2F4B4E;
     margin-bottom: 2rem;
@@ -42,7 +42,7 @@ html, body, #root {
   }
   
   /* Form layout */
-  .register-student-container form {
+  .remove-student-container form {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -50,7 +50,7 @@ html, body, #root {
   }
   
   /* Two-column layout container */
-  .register-student-grid {
+  .remove-student-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
@@ -60,7 +60,7 @@ html, body, #root {
   }
   
   /* Left panel styles */
-  .register-student-left-panel {
+  .remove-student-left-panel {
     padding: 1.5rem;
     background-color: #2F4B4E;
     border-radius: 8px;
@@ -69,7 +69,7 @@ html, body, #root {
   }
   
   /* Right panel styles */
-  .register-student-right-panel {
+  .remove-student-right-panel {
     padding: 1.5rem;
     background-color: #2F4B4E;
     border-radius: 8px;
@@ -78,8 +78,8 @@ html, body, #root {
   }
   
   /* Form element styling */
-  .register-student-left-panel label,
-  .register-student-right-panel label {
+  .remove-student-left-panel label,
+  .remove-student-right-panel label {
     display: block;
     margin-bottom: 0.5rem;
     color: #FFFFFF;
@@ -87,8 +87,8 @@ html, body, #root {
     font-weight: 500;
   }
   
-  .register-student-left-panel input,
-  .register-student-right-panel select {
+  .remove-student-left-panel input,
+  .remove-student-right-panel select {
     width: 100%;
     padding: 0.75rem;
     margin-bottom: 1.5rem;
@@ -100,44 +100,15 @@ html, body, #root {
     box-sizing: border-box;
   }
   
-  .register-student-left-panel input:focus,
-  .register-student-right-panel select:focus {
+  .remove-student-left-panel input:focus,
+  .remove-student-right-panel select:focus {
     outline: none;
     border-color: #f8f9fa;
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
   }
   
-  /* Capture button container */
-  .register-student-capture-container {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    margin: 1rem 0 2rem 0;
-  }
-  
-  /* Capture button styling */
-  .register-student-capture-button {
-    padding: 0.75rem 2.5rem;
-    background-color: #4a7a7f;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.2s;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-  
-  .register-student-capture-button:hover {
-    background-color: #FFFFFF;
-    color: #2F4B4E;
-    transform: translateY(-2px);
-    border: 1px solid #2F4B4E;
-  }
-  
   /* Button container */
-  .register-student-buttons-container {
+  .remove-student-buttons-container {
     display: flex;
     justify-content: center;
     gap: 1.5rem;
@@ -147,7 +118,7 @@ html, body, #root {
   }
   
   /* Button styles */
-  .register-student-submit-button {
+  .remove-student-submit-button {
     padding: 0.75rem 2rem;
     background-color: #2F4B4E;
     color: white;
@@ -159,14 +130,14 @@ html, body, #root {
     transition: background-color 0.3s, transform 0.2s;
   }
   
-  .register-student-submit-button:hover {
+  .remove-student-submit-button:hover {
     background-color: #FFFFFF;
     color: #2F4B4E;
     transform: translateY(-2px);
     border: 1px solid #2F4B4E;
   }
   
-  .register-student-reset-button {
+  .remove-student-reset-button {
     padding: 0.75rem 2rem;
     background-color: #f8f9fa;
     color: #2F4B4E;
@@ -178,23 +149,14 @@ html, body, #root {
     transition: background-color 0.3s, transform 0.2s;
   }
   
-  .register-student-reset-button:hover {
+  .remove-student-reset-button:hover {
     background-color: #2F4B4E;
     transform: translateY(-2px);
     color: white;
   }
   
-  /* Section headers */
-  .register-student-section-header {
-    color: #FFFFFF;
-    font-size: 1.3rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid #e9ecef;
-  }
-  
   /* Vertical line divider */
-  .register-student-grid::after {
+  .remove-student-grid::after {
     content: '';
     position: absolute;
     top: 10%;
@@ -205,25 +167,33 @@ html, body, #root {
     transform: translateX(-50%);
   }
   
+  /* Section headers if needed */
+  .remove-student-section-header {
+    color: #FFFFFF;
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+  }
+  
   /* Responsive adjustments */
   @media (max-width: 768px) {
-    .register-student-grid {
+    .remove-student-grid {
       grid-template-columns: 1fr;
       gap: 1.5rem;
     }
     
-    .register-student-grid::after {
+    .remove-student-grid::after {
       display: none;
     }
     
-    .register-student-buttons-container {
+    .remove-student-buttons-container {
       flex-direction: column;
       align-items: center;
     }
     
-    .register-student-submit-button,
-    .register-student-reset-button,
-    .register-student-capture-button {
+    .remove-student-submit-button,
+    .remove-student-reset-button {
       width: 100%;
       max-width: 300px;
     }

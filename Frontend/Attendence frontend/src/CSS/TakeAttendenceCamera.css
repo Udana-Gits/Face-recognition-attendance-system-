@@ -1,5 +1,10 @@
-/* TakeAttendenceCamera.css */
+body {
+  background-color: #2F4B4E; /* Replace with your desired color */
+  margin: 0;
+  padding: 0;
+}
 
+/* Layout split between camera and attendance list */
 .split-container {
   display: flex;
   width: 100%;
@@ -7,47 +12,58 @@
   gap: 20px;
   padding: 20px;
   box-sizing: border-box;
+  background-color: #2F4B4E; /* Background color for the entire container */
+
+  background-image: url('../Images/t4.png'); /* Replace with your image path */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
-/* Left side containing camera and controls */
+/* LEFT PANE - Camera + Buttons */
 .left-pane {
   display: flex;
   flex-direction: column;
-  width: 620px; /* Slightly wider than the camera to account for padding/borders */
+  width: 620px; /* Slightly wider than camera to fit buttons */
   height: 100%;
+  background-color: #2F4B4E;
 }
 
-/* Camera container with proper positioning for video and canvas overlay */
+/* CAMERA AREA: Contains both video and canvas stacked */
 .camera_canvas {
   position: relative;
   width: 600px;
   height: 480px;
   margin-bottom: 20px;
-  border: 2px solid #ccc;
+  border: 2px solid #FFFFFF;
   border-radius: 4px;
-  overflow: hidden; /* Keep canvas and video within bounds */
+  overflow: hidden;
   background-color: #000;
 }
 
+/* VIDEO: Full size, behind canvas */
 .camera_canvas video {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; /* Changed from cover to contain */
+  z-index: 1;
 }
 
+/* CANVAS: Transparent, drawn over video */
 .camera_canvas canvas {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 10; /* Place canvas above video for drawings */
+  z-index: 10;
+  pointer-events: none;
 }
 
-/* Control buttons container */
+/* Rest of the CSS remains the same */
 .control-buttons {
   display: flex;
   gap: 10px;
@@ -57,9 +73,9 @@
 .control-buttons button {
   flex: 1;
   padding: 12px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
+  background-color: #FFFFFF;
+  color: #2F4B4E;
+  border: 1px solid #FFFFFF;
   border-radius: 4px;
   cursor: pointer;
   font-size: 16px;
@@ -68,7 +84,9 @@
 }
 
 .control-buttons button:hover {
-  background-color: #45a049;
+  background-color: #2F4B4E;
+  color: #FFFFFF;
+  border: 1px solid #FFFFFF;
 }
 
 .control-buttons button:disabled {
@@ -77,32 +95,40 @@
 }
 
 .control-buttons button:nth-child(2) {
-  background-color: #f44336;
+  background-color: #FFFFFF;
+  color: #2F4B4E;
+  border: 1px solid #FFFFFF;
 }
 
 .control-buttons button:nth-child(2):hover {
-  background-color: #d32f2f;
+  background-color: #2F4B4E;
+  color: #FFFFFF;
+  border: 1px solid #FFFFFF;
 }
 
 .control-buttons button:nth-child(3) {
-  background-color: #2196F3;
+  background-color: #FFFFFF;
+  color: #2F4B4E;
+  border: 1px solid #FFFFFF;
 }
 
 .control-buttons button:nth-child(3):hover {
-  background-color: #0b7dda;
+  background-color: #2F4B4E;
+  color: #FFFFFF;
+  border: 1px solid #FFFFFF;
 }
 
-/* Right side containing the attendance table */
+/* RIGHT PANE - Attendance List */
 .right-pane {
   flex: 1;
   display: flex;
   flex-direction: column;
   height: 100%;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 2px solid #FFFFFF;
+  border-radius: 8px;
   padding: 15px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  background-color: #f9f9f9;
+  background-color: #2F4B4E;
   overflow: hidden;
 }
 
@@ -110,12 +136,12 @@
   margin-top: 0;
   margin-bottom: 15px;
   padding-bottom: 10px;
-  border-bottom: 2px solid #eee;
-  color: #333;
+  border-bottom: 2px solid #FFFFFF;
+  color: #FFFFFF;
   text-align: center;
 }
 
-/* Attendance table styles */
+/* ATTENDANCE TABLE */
 .attendence_table {
   width: 100%;
   border-collapse: collapse;
@@ -124,45 +150,105 @@
 }
 
 .attendence_table th {
-  background-color: #4CAF50;
-  color: white;
+  background-color: #FFFFFF;
+  color: #2F4B4E;
   text-align: left;
   padding: 12px;
   position: sticky;
   top: 0;
   z-index: 1;
+  text-align: center;
+  
 }
 
 .attendence_table td {
   padding: 10px 12px;
   border-bottom: 1px solid #ddd;
+  color: #2F4B4E;
+  background-color: #FFFFFF;
 }
 
 .attendence_table tbody tr:nth-child(even) {
-  background-color: #f2f2f2;
+  background-color: #2F4B4E;
+  
 }
 
-.attendence_table tbody tr:hover {
-  background-color: #ddd;
+/* Add a stronger horizontal line between table headers and data */
+.attendence_table thead {
+  border-bottom: 1px solid #2F4B4E; /* White border to match your theme */
 }
 
-/* Responsive adjustments */
+/* Alternative approach: add border to first row of tbody */
+.attendence_table tbody tr:first-child td {
+  border-top: 1px solid #2F4B4E;
+}
+
+/* Add vertical borders between table columns */
+.attendence_table th, 
+.attendence_table td {
+  border-right: 1px solid #2F4B4E; /* Add vertical borders */
+}
+
+/* Remove the border from the last cell in each row */
+.attendence_table th:last-child,
+.attendence_table td:last-child {
+  border-right: none;
+}
+
+/* Set percentage widths for responsive design */
+.attendence_table th:nth-child(1), 
+.attendence_table td:nth-child(1) {
+  width: 25%; /* Student ID column */
+}
+
+.attendence_table th:nth-child(2), 
+.attendence_table td:nth-child(2) {
+  width: 40%; /* Name column - takes half the space */
+}
+
+.attendence_table th:nth-child(3), 
+.attendence_table td:nth-child(3) {
+  width: 35%; /* Time column */
+}
+
+
+/* Rounded top corners of the table */
+.attendence_table thead tr th:first-child {
+  border-top-left-radius: 8px;
+}
+
+.attendence_table thead tr th:last-child {
+  border-top-right-radius: 8px;
+}
+
+/* Rounded bottom corners of the table */
+.attendence_table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 8px;
+}
+
+.attendence_table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 8px;
+}
+
+
+
+/* MOBILE / TABLET RESPONSIVE */
 @media (max-width: 1200px) {
   .split-container {
     flex-direction: column;
     height: auto;
   }
-  
+
   .left-pane {
     width: 100%;
     max-width: 620px;
     margin: 0 auto;
   }
-  
+
   .right-pane {
     width: 100%;
     max-width: 620px;
     margin: 20px auto 0;
-    height: 400px; /* Fixed height for table in mobile view */
+    height: 400px;
   }
 }
