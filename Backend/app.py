@@ -1,4 +1,5 @@
 import eventlet
+
 eventlet.monkey_patch()
 
 import os
@@ -20,23 +21,21 @@ from numpy.linalg import norm
 
 detector = MTCNN()
 
-
 loaded_embeddings = {}
 processing_lock = threading.Lock()
-
-
 
 app = Flask(__name__)
 CORS(app)  # Allow frontend to access backend
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet', ping_timeout=10, ping_interval=5)
 
-
 recent_recognitions = {}
+
 
 # Add WebSocket functionality
 @socketio.on('connect')
 def handle_connect():
     print('Client connected')
+
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -131,6 +130,27 @@ def remove_student():
         print(f"Removed embedding file: {embedding_path}")
 
     return jsonify({"message": "Student removed successfully!"})
+
+
+# New endpoint to handle load-embeddings request
+@app.route('/load-embeddings', methods=['POST'])
+def load_embeddings():
+    data = request.get_json()
+    intakes = data.get('intakes', [])
+    courses = data.get('courses', [])
+
+    if not intakes or not courses:
+        return jsonify({"message": "Missing intake or course information"}), 400
+
+    try:
+        count = load_embeddings_for_courses(intakes, courses)
+        return jsonify({
+            "message": f"Successfully loaded {count} embeddings",
+            "count": count
+        })
+    except Exception as e:
+        print(f"Error loading embeddings: {e}")
+        return jsonify({"message": f"Error loading embeddings: {str(e)}"}), 500
 
 
 def create_student_embeddings(data):
@@ -365,12 +385,6 @@ def process_frame(data):
             socketio.emit('frame_processed')
             return
 
-        # Reduce image size further if needed for even faster processing
-        # height, width = img.shape[:2]
-        # if width > 160:
-        #     scale_factor = 160 / width
-        #     img = cv2.resize(img, (160, int(height * scale_factor)))
-
         # Fast face detection with minimal parameters
         try:
             results = detector.detect_faces(img)
@@ -383,103 +397,120 @@ def process_frame(data):
             socketio.emit('frame_processed')
             return
 
-        # Only process the largest face (likely the closest to the camera)
-        largest_face = max(results, key=lambda x: x['box'][2] * x['box'][3])
-        x, y, w, h = largest_face["box"]
+        # Process faces at various distances
+        faces_processed = False
 
-        # Skip if face is too small
-        if w < 20 or h < 20:
-            socketio.emit('frame_processed')
-            return
+        # Sort faces by size (area), largest first
+        sorted_faces = sorted(results, key=lambda x: x['box'][2] * x['box'][3], reverse=True)
 
-        try:
-            # Add small padding to the face box
-            padding_x = int(w * 0.05)  # Reduced padding for speed
-            padding_y = int(h * 0.05)
+        # Process up to 3 largest faces for efficiency
+        for face in sorted_faces[:3]:
+            x, y, w, h = face["box"]
 
-            # Ensure coordinates are within bounds
-            x_start = max(0, x - padding_x)
-            y_start = max(0, y - padding_y)
-            x_end = min(img.shape[1], x + w + padding_x)
-            y_end = min(img.shape[0], y + h + padding_y)
+            # Skip extremely small faces (probably too far)
+            if w < 15 or h < 15:
+                continue
 
-            face_img = img[y_start:y_end, x_start:x_end]
+            # Adjust padding based on face size
+            padding_factor = 0.05  # Default padding
+            if w > 100:  # Close face
+                padding_factor = 0.02  # Less padding needed for large faces
+            elif w < 30:  # Far face
+                padding_factor = 0.1  # More padding for small faces
 
-            # Skip tiny crops that might cause errors
-            if face_img.shape[0] < 10 or face_img.shape[1] < 10:
-                socketio.emit('frame_processed')
-                return
+            padding_x = int(w * padding_factor)
+            padding_y = int(h * padding_factor)
 
-            # Pre-resize the image to exactly what ArcFace needs to avoid extra processing
-            resized_face = cv2.resize(face_img, (112, 112))
+            try:
+                # Ensure coordinates are within bounds
+                x_start = max(0, x - padding_x)
+                y_start = max(0, y - padding_y)
+                x_end = min(img.shape[1], x + w + padding_x)
+                y_end = min(img.shape[0], y + h + padding_y)
 
-            # Get embedding with optimized settings
-            embedding_result = DeepFace.represent(
-                resized_face,
-                model_name='ArcFace',
-                enforce_detection=False,
-                detector_backend='skip'  # Skip detection since we already did it
-            )
+                face_img = img[y_start:y_end, x_start:x_end]
 
-            if not embedding_result:
-                socketio.emit('frame_processed')
-                return
+                # Skip tiny crops that might cause errors
+                if face_img.shape[0] < 10 or face_img.shape[1] < 10:
+                    continue
 
-            emb = embedding_result[0]['embedding']
+                # Pre-resize the image to exactly what ArcFace needs to avoid extra processing
+                resized_face = cv2.resize(face_img, (112, 112))
 
-            # Find best match using vectorized operations for speed
-            if loaded_embeddings:
-                # Get all embeddings as a matrix for fast comparison
-                names = list(loaded_embeddings.keys())
-                embeddings_matrix = np.array([loaded_embeddings[name] for name in names])
+                # Get embedding with optimized settings
+                embedding_result = DeepFace.represent(
+                    resized_face,
+                    model_name='ArcFace',
+                    enforce_detection=False,
+                    detector_backend='skip'  # Skip detection since we already did it
+                )
 
-                # Compute similarities in one go
-                emb_normalized = emb / np.linalg.norm(emb)
-                embeddings_normalized = embeddings_matrix / np.linalg.norm(embeddings_matrix, axis=1)[:, np.newaxis]
-                similarities = np.dot(embeddings_normalized, emb_normalized)
+                if not embedding_result:
+                    continue
 
-                # Find best match
-                best_idx = np.argmax(similarities)
-                best_similarity = similarities[best_idx]
-                best_match = names[best_idx]
+                emb = embedding_result[0]['embedding']
 
-                # Set a stricter threshold for more accurate recognition
-                if best_similarity > 0.75:
-                    # Check if we just recognized this person to avoid duplicates
-                    current_time = time.time()
-                    if best_match in recent_recognitions:
-                        # Only re-emit if it's been at least 1 second
-                        if current_time - recent_recognitions[best_match] < 1.0:
-                            socketio.emit('frame_processed')
-                            return
+                # Find best match using vectorized operations for speed
+                if loaded_embeddings:
+                    # Get all embeddings as a matrix for fast comparison
+                    names = list(loaded_embeddings.keys())
+                    embeddings_matrix = np.array([loaded_embeddings[name] for name in names])
 
-                    # Update recognition time
-                    recent_recognitions[best_match] = current_time
+                    # Compute similarities in one go
+                    emb_normalized = emb / np.linalg.norm(emb)
+                    similarities = np.dot(embeddings_matrix, emb_normalized)
 
-                    # Emit recognition event
-                    socketio.emit('recognition_event', {
-                        'type': 'recognition',
-                        'name': best_match,
-                        'similarity': float(best_similarity),
-                        'box': [x, y, w, h],
-                        'processing_time': time.time() - start_time,
-                        'latency': time.time() - (client_timestamp / 1000)
-                    })
+                    # Find best match
+                    best_idx = np.argmax(similarities)
+                    best_similarity = similarities[best_idx]
+                    best_match = names[best_idx]
 
-                    # Log performance metrics
-                    print(f"Recognition: {best_match} ({best_similarity:.2f}) - "
-                          f"Processing: {(time.time() - start_time) * 1000:.0f}ms, "
-                          f"Latency: {(time.time() - (client_timestamp / 1000)) * 1000:.0f}ms")
+                    # Adjust threshold based on face size
+                    # Smaller faces (further away) may need a lower threshold
+                    threshold = 0.75
+                    if w < 30:  # Far faces
+                        threshold = 0.72  # Slightly more forgiving for distant faces
 
-        except Exception as e:
-            print(f"Recognition error: {e}")
+                    # Set a stricter threshold for more accurate recognition
+                    if best_similarity > threshold:
+                        # Check if we just recognized this person to avoid duplicates
+                        current_time = time.time()
+                        if best_match in recent_recognitions:
+                            # Only re-emit if it's been at least 1 second
+                            if current_time - recent_recognitions[best_match] < 1.0:
+                                continue
+
+                        # Update recognition time
+                        recent_recognitions[best_match] = current_time
+                        faces_processed = True
+
+                        # Emit recognition event
+                        socketio.emit('recognition_event', {
+                            'type': 'recognition',
+                            'name': best_match,
+                            'similarity': float(best_similarity),
+                            'box': [x, y, w, h],
+                            'processing_time': time.time() - start_time,
+                            'latency': time.time() - (client_timestamp / 1000)
+                        })
+
+                        # Log performance metrics
+                        print(f"Recognition: {best_match} ({best_similarity:.2f}) - "
+                              f"Processing: {(time.time() - start_time) * 1000:.0f}ms, "
+                              f"Latency: {(time.time() - (client_timestamp / 1000)) * 1000:.0f}ms")
+
+            except Exception as e:
+                print(f"Recognition error for face: {e}")
+                continue
+
+        if not faces_processed:
+            print("No faces successfully processed")
 
     except Exception as e:
         print(f"Frame processing error: {e}")
 
     # Always emit frame_processed to unblock client
     socketio.emit('frame_processed')
-
 
 
 @socketio.on('stop_recognition')

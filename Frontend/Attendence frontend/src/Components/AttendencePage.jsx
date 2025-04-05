@@ -13,33 +13,27 @@ function AttendencePage(){
     const handleCheckboxChangeIntake = (e) => {
         const value = e.target.value
         if (selectedOptionsIntake.includes(value)) {
-          // ✅ Remove if already selected
           setSelectedOptionsIntake(selectedOptionsIntake.filter(item => item !== value))
         } else {
-          // ✅ Add new selection
           setSelectedOptionsIntake([...selectedOptionsIntake, value])
         }
-      }
+    }
 
-      const handleCheckboxChangeCourse = (e) => {
+    const handleCheckboxChangeCourse = (e) => {
         const value = e.target.value
         if (selectedOptionsCourse.includes(value)) {
-          // ✅ Remove if already selected
           setSelectedOptionsCourse(selectedOptionsCourse.filter(item => item !== value))
         } else {
-          // ✅ Add new selection
           setSelectedOptionsCourse([...selectedOptionsCourse, value])
         }
-      }
+    }
 
-      const handleReset = () => {
+    const handleReset = () => {
         setSelectedOptionsIntake([])
         setSelectedOptionsCourse([])
-      }
+    }
 
-      
-
-      const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
       
         if (selectedOptionsIntake.length === 0 || selectedOptionsCourse.length === 0) {
@@ -61,7 +55,6 @@ function AttendencePage(){
       
           if (response.ok) {
             alert(result.message)
-            // Navigate to the camera page with the selected options
             navigate('/takeattendencecamera', {
               state: {
                 selectedOptionsIntake,
@@ -75,70 +68,144 @@ function AttendencePage(){
           console.error("Error sending selections:", error)
           alert("Server error.")
         }
-      }
+    }
+    
+    function goback(){
+        navigate('/mainpage')
+    }
       
-      
-
     return(
-        <div className="attendence-page">
-            <h1>AttendencePage</h1>
+        <div className="attendance-container">
+            <h1 className="attendance-title">Whose attendance would you like to record?</h1>
             <form onSubmit={handleSubmit}>
-            <div className="split-container_attendencepage">
-                <div className="left-paner_attendencepage">
-                    <h4>Select Intake</h4>
-                    <br />
-                    <label>
-                        <input type="checkbox" value="Intake 39" onChange={handleCheckboxChangeIntake} checked={selectedOptionsIntake.includes("Intake 39")} />Intake 39
-                    </label>
-                    <br />
-                    <label>
-                        <input type="checkbox" value="Intake 40" onChange={handleCheckboxChangeIntake} checked={selectedOptionsIntake.includes("Intake 40")} />Intake 40
-                    </label>
-                    <br />
-                    <label>
-                        <input type="checkbox" value="Intake 41" onChange={handleCheckboxChangeIntake} checked={selectedOptionsIntake.includes("Intake 41")} />Intake 41
-                    </label>
-                    <br />
-                    <label>
-                        <input type="checkbox" value="Intake 42" onChange={handleCheckboxChangeIntake} checked={selectedOptionsIntake.includes("Intake 42")} />Intake 42    
-                    </label>
-                    <br /> 
+                <div className="attendance-selection-grid">
+                    <div className="attendance-intake-panel">
+                        <h4 className="attendance-section-header">Select Intake</h4>
+                        
+                        <label className="attendance-checkbox-item">
+                            <input 
+                                type="checkbox" 
+                                className="attendance-checkbox"
+                                value="Intake 39" 
+                                onChange={handleCheckboxChangeIntake} 
+                                checked={selectedOptionsIntake.includes("Intake 39")} 
+                            />
+                            <span className="attendance-checkbox-label">Intake 39</span>
+                        </label>
+                        
+                        <label className="attendance-checkbox-item">
+                            <input 
+                                type="checkbox" 
+                                className="attendance-checkbox"
+                                value="Intake 40" 
+                                onChange={handleCheckboxChangeIntake} 
+                                checked={selectedOptionsIntake.includes("Intake 40")} 
+                            />
+                            <span className="attendance-checkbox-label">Intake 40</span>
+                        </label>
+                        
+                        <label className="attendance-checkbox-item">
+                            <input 
+                                type="checkbox" 
+                                className="attendance-checkbox"
+                                value="Intake 41" 
+                                onChange={handleCheckboxChangeIntake} 
+                                checked={selectedOptionsIntake.includes("Intake 41")} 
+                            />
+                            <span className="attendance-checkbox-label">Intake 41</span>
+                        </label>
+                        
+                        <label className="attendance-checkbox-item">
+                            <input 
+                                type="checkbox" 
+                                className="attendance-checkbox"
+                                value="Intake 42" 
+                                onChange={handleCheckboxChangeIntake} 
+                                checked={selectedOptionsIntake.includes("Intake 42")} 
+                            />
+                            <span className="attendance-checkbox-label">Intake 42</span>
+                        </label>
+                    </div>
+                    
+                    <div className="attendance-course-panel">
+                        <h4 className="attendance-section-header">Select Course</h4>
+                        
+                        <label className="attendance-checkbox-item">
+                            <input 
+                                type="checkbox" 
+                                className="attendance-checkbox"
+                                value="Computer Science" 
+                                onChange={handleCheckboxChangeCourse} 
+                                checked={selectedOptionsCourse.includes("Computer Science")} 
+                            />
+                            <span className="attendance-checkbox-label">Computer Science</span>
+                        </label>
+                        
+                        <label className="attendance-checkbox-item">
+                            <input 
+                                type="checkbox" 
+                                className="attendance-checkbox"
+                                value="Software Engineering" 
+                                onChange={handleCheckboxChangeCourse} 
+                                checked={selectedOptionsCourse.includes("Software Engineering")} 
+                            />
+                            <span className="attendance-checkbox-label">Software Engineering</span>
+                        </label>
+                        
+                        <label className="attendance-checkbox-item">
+                            <input 
+                                type="checkbox" 
+                                className="attendance-checkbox"
+                                value="Computer Engineering" 
+                                onChange={handleCheckboxChangeCourse} 
+                                checked={selectedOptionsCourse.includes("Computer Engineering")} 
+                            />
+                            <span className="attendance-checkbox-label">Computer Engineering</span>
+                        </label>
+                        
+                        <label className="attendance-checkbox-item">
+                            <input 
+                                type="checkbox" 
+                                className="attendance-checkbox"
+                                value="Data Science and Business Analytics" 
+                                onChange={handleCheckboxChangeCourse} 
+                                checked={selectedOptionsCourse.includes("Data Science and Business Analytics")} 
+                            />
+                            <span className="attendance-checkbox-label">Data Science and Business Analytics</span>
+                        </label>
+                        
+                        <label className="attendance-checkbox-item">
+                            <input 
+                                type="checkbox" 
+                                className="attendance-checkbox"
+                                value="Information Technology" 
+                                onChange={handleCheckboxChangeCourse} 
+                                checked={selectedOptionsCourse.includes("Information Technology")} 
+                            />
+                            <span className="attendance-checkbox-label">Information Technology</span>
+                        </label>
+                        
+                        <label className="attendance-checkbox-item">
+                            <input 
+                                type="checkbox" 
+                                className="attendance-checkbox"
+                                value="Information Systems" 
+                                onChange={handleCheckboxChangeCourse} 
+                                checked={selectedOptionsCourse.includes("Information Systems")} 
+                            />
+                            <span className="attendance-checkbox-label">Information Systems</span>
+                        </label>
+                    </div>
                 </div>
-                <div className="right-paner_attendencepage">
-                    <h4>Select Course</h4>
-                    <br />
-                    <label>
-                        <input type="checkbox" value="Computer Science" onChange={handleCheckboxChangeCourse} checked={selectedOptionsCourse.includes("Computer Science")} />Computer Science
-                    </label>
-                    <br />
-                    <label>
-                        <input type="checkbox" value="Software Engineering" onChange={handleCheckboxChangeCourse} checked={selectedOptionsCourse.includes("Software Engineering")} />Software Engineering
-                    </label>
-                    <br />
-                    <label>
-                        <input type="checkbox" value="Computer Engineering" onChange={handleCheckboxChangeCourse} checked={selectedOptionsCourse.includes("Computer Engineering")} />Computer Engineering
-                    </label>
-                    <br />
-                    <label>
-                        <input type="checkbox" value="Data Science and Business Analytics" onChange={handleCheckboxChangeCourse} checked={selectedOptionsCourse.includes("Data Science and Business Analytics")} />Data Science and Business Analytics
-                    </label>
-                    <br />
-                    <label>
-                        <input type="checkbox" value="Information Technology" onChange={handleCheckboxChangeCourse} checked={selectedOptionsCourse.includes("Information Technology")} />Information Technology
-                    </label>
-                    <br />
-                    <label>
-                        <input type="checkbox" value="Information Systems" onChange={handleCheckboxChangeCourse} checked={selectedOptionsCourse.includes("Information Systems")} />Information Systems
-                    </label>
-                    <br />          
+                
+                <div className="attendance-buttons-container">
+                    <button type="submit" className="attendance-submit-button">Take Attendance</button>
+                    <button type="reset" onClick={handleReset} className="attendance-reset-button">Clear</button>
+                    <button type="reset" onClick={goback} className="attendance-submit-button">Back</button>
                 </div>
-            </div>
-            <button type="submit" >Take Attendence</button>
-            <button type="reset" onClick={handleReset} >Clear</button>
-        </form>
-    </div>
+            </form>
+        </div>
     )
-
 }
 
 export default AttendencePage;

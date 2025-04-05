@@ -92,16 +92,13 @@ function TakeAttendenceCamera() {
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Get the actual video dimensions being displayed
-        const videoElement = video;
-        const videoWidth = videoElement.videoWidth;
-        const videoHeight = videoElement.videoHeight;
-        
-        // Calculate display dimensions with proper aspect ratio
+        // Get the actual video dimensions
+        const videoWidth = video.videoWidth;
+        const videoHeight = video.videoHeight;
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
         
-        // Calculate scaling based on how the video is actually displayed
+        // Calculate display dimensions with proper aspect ratio
         let displayWidth, displayHeight, offsetX = 0, offsetY = 0;
         
         const videoAspect = videoWidth / videoHeight;
@@ -119,12 +116,14 @@ function TakeAttendenceCamera() {
             offsetX = (canvasWidth - displayWidth) / 2;
         }
         
-        // The backend processes images at 160px width
+        // Scale factors between original video dimensions and displayed size
+        const scaleFactorX = displayWidth / videoWidth;
+        const scaleFactorY = displayHeight / videoHeight;
+        
+        // Backend processing width (where face detection happens)
         const processingWidth = 160;
-        // Calculate the scale factor between processed image and displayed video
-        const scaleX = displayWidth / processingWidth;
-        // Calculate height scale based on aspect ratio
-        const scaleY = scaleX; // Use same scale to maintain aspect ratio
+        // Scale between processing image and original video
+        const processingScale = processingWidth / videoWidth;
         
         // Filter out old faces (older than 2 seconds)
         const now = Date.now();
@@ -136,24 +135,32 @@ function TakeAttendenceCamera() {
         activeFaces.forEach(([id, face]) => {
             const [x, y, w, h] = face.box;
             
-            // Scale box to canvas
-            const boxX = x * scaleX + offsetX;
-            const boxY = y * scaleY + offsetY;
-            const boxWidth = w * scaleX;
-            const boxHeight = h * scaleY;
+            // First convert from processing coordinates to original video coordinates
+            const originalX = x / processingScale;
+            const originalY = y / processingScale;
+            const originalWidth = w / processingScale;
+            const originalHeight = h / processingScale;
+            
+            // Then convert to canvas display coordinates
+            const boxX = (originalX * scaleFactorX) + offsetX;
+            const boxY = (originalY * scaleFactorY) + offsetY;
+            const boxWidth = originalWidth * scaleFactorX;
+            const boxHeight = originalHeight * scaleFactorY;
             
             // Draw face box
             ctx.strokeStyle = '#00FF00';
             ctx.lineWidth = 3;
             ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
             
-            // Draw name label
+            // Draw name label (slightly improved positioning)
             ctx.font = 'bold 16px Arial';
             const textWidth = ctx.measureText(face.name).width;
+            const labelY = Math.max(25, boxY); // Ensure label doesn't go off-screen
+            
             ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            ctx.fillRect(boxX, boxY - 25, textWidth + 20, 25);
+            ctx.fillRect(boxX, labelY - 25, textWidth + 20, 25);
             ctx.fillStyle = '#FFFFFF';
-            ctx.fillText(face.name, boxX + 10, boxY - 7);
+            ctx.fillText(face.name, boxX + 10, labelY - 7);
         });
         
         // Remove old faces from tracking
@@ -318,7 +325,7 @@ function TakeAttendenceCamera() {
             </div>
             <div className="right-pane">
                 <h2>Attendance List</h2>
-                <p>Total Students: {attendanceList.length}</p>
+                
                 <table className="attendence_table">
                     <thead>
                         <tr>
@@ -339,6 +346,7 @@ function TakeAttendenceCamera() {
                         )}
                     </tbody>
                 </table>
+                <p>Total Students: {attendanceList.length}</p>
             </div>
         </div>
     );
