@@ -4,6 +4,10 @@ html, body, #root {
     padding: 0;
     height: 100%;
     width: 100%;
+    background-image: url('../Images/t4.png'); /* Replace with your image path */
+    background-size: fill;
+    background-position: center;
+    background-repeat: no-repeat;
   }
    
   /* Main container styles */
@@ -20,7 +24,6 @@ html, body, #root {
     align-items: center;
     /* Removed absolute positioning to fix scrolling issues */
     overflow-y: auto;
-
     background-image: url('../Images/t4.png'); /* Replace with your image path */
     background-size: cover;
     background-position: center;
