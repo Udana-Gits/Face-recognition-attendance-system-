@@ -52,7 +52,7 @@ function RemoveStudentPage(){
         })
     }
     function goback(){
-        navigate('/mainpage')
+        navigate('/')
     }
 
     return(

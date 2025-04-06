@@ -84,7 +84,7 @@ function RegisterPage(){
     }
 
     function goback(){
-        Navigate('/mainpage')
+        Navigate('/')
     }
 
     return(

@@ -368,6 +368,7 @@ def start_recognition(data, callback=None):
     return {'status': 'success', 'message': 'Recognition started'}
 
 
+# In the process_frame function in app.py
 @socketio.on('process_frame')
 def process_frame(data):
     # Track processing time
@@ -382,18 +383,21 @@ def process_frame(data):
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
         if img is None or img.size == 0:
+            print("❌ Image is empty or invalid")
             socketio.emit('frame_processed')
             return
 
         # Fast face detection with minimal parameters
         try:
             results = detector.detect_faces(img)
+            print(f"👁️ Detected {len(results)} faces in frame")
         except Exception as e:
-            print(f"Face detection error: {e}")
+            print(f"❌ Face detection error: {e}")
             socketio.emit('frame_processed')
             return
 
         if not results:
+            print("⚠️ No faces detected in this frame")
             socketio.emit('frame_processed')
             return
 
@@ -403,12 +407,23 @@ def process_frame(data):
         # Sort faces by size (area), largest first
         sorted_faces = sorted(results, key=lambda x: x['box'][2] * x['box'][3], reverse=True)
 
+        # Emit all detected faces for debugging
+        for i, face in enumerate(sorted_faces):
+            socketio.emit('face_detected', {
+                'index': i,
+                'box': face['box'],
+                'confidence': float(face['confidence'])
+            })
+
         # Process up to 3 largest faces for efficiency
-        for face in sorted_faces[:3]:
+        for i, face in enumerate(sorted_faces[:3]):
             x, y, w, h = face["box"]
+            confidence = face["confidence"]
+            print(f"🔍 Processing face #{i + 1}: Size {w}x{h}, Confidence: {confidence:.2f}")
 
             # Skip extremely small faces (probably too far)
             if w < 15 or h < 15:
+                print(f"⏭️ Skipping face #{i + 1}: Too small ({w}x{h})")
                 continue
 
             # Adjust padding based on face size
@@ -432,20 +447,32 @@ def process_frame(data):
 
                 # Skip tiny crops that might cause errors
                 if face_img.shape[0] < 10 or face_img.shape[1] < 10:
+                    print(f"⏭️ Skipping face #{i + 1}: Cropped size too small")
                     continue
 
                 # Pre-resize the image to exactly what ArcFace needs to avoid extra processing
                 resized_face = cv2.resize(face_img, (112, 112))
 
                 # Get embedding with optimized settings
-                embedding_result = DeepFace.represent(
-                    resized_face,
-                    model_name='ArcFace',
-                    enforce_detection=False,
-                    detector_backend='skip'  # Skip detection since we already did it
-                )
+                try:
+                    embedding_result = DeepFace.represent(
+                        resized_face,
+                        model_name='ArcFace',
+                        enforce_detection=False,
+                        detector_backend='skip'  # Skip detection since we already did it
+                    )
+                    print(f"✅ Successfully generated embedding for face #{i + 1}")
+                except Exception as e:
+                    print(f"❌ Failed to generate embedding for face #{i + 1}: {e}")
+                    # Still emit this face for visualization
+                    socketio.emit('unrecognized_face', {
+                        'box': [x, y, w, h],
+                        'error': str(e)
+                    })
+                    continue
 
                 if not embedding_result:
+                    print(f"⚠️ Empty embedding result for face #{i + 1}")
                     continue
 
                 emb = embedding_result[0]['embedding']
@@ -465,11 +492,25 @@ def process_frame(data):
                     best_similarity = similarities[best_idx]
                     best_match = names[best_idx]
 
+                    print(f"🔍 Face #{i + 1} - Best match: {best_match}, Similarity: {best_similarity:.4f}")
+
                     # Adjust threshold based on face size
                     # Smaller faces (further away) may need a lower threshold
                     threshold = 0.75
                     if w < 30:  # Far faces
                         threshold = 0.72  # Slightly more forgiving for distant faces
+
+                    # Check if similarity is below threshold but emit anyway for debugging
+                    if best_similarity <= threshold:
+                        print(
+                            f"⚠️ Face #{i + 1} - Best match below threshold: {best_match} ({best_similarity:.4f} < {threshold})")
+                        socketio.emit('below_threshold_match', {
+                            'name': best_match,
+                            'similarity': float(best_similarity),
+                            'threshold': threshold,
+                            'box': [x, y, w, h]
+                        })
+                        continue
 
                     # Set a stricter threshold for more accurate recognition
                     if best_similarity > threshold:
@@ -495,19 +536,29 @@ def process_frame(data):
                         })
 
                         # Log performance metrics
-                        print(f"Recognition: {best_match} ({best_similarity:.2f}) - "
+                        print(f"✅ Recognition: {best_match} ({best_similarity:.2f}) - "
                               f"Processing: {(time.time() - start_time) * 1000:.0f}ms, "
                               f"Latency: {(time.time() - (client_timestamp / 1000)) * 1000:.0f}ms")
+                else:
+                    print("⚠️ No embeddings loaded - cannot recognize faces")
+                    socketio.emit('unrecognized_face', {
+                        'box': [x, y, w, h],
+                        'error': 'No embeddings loaded'
+                    })
 
             except Exception as e:
-                print(f"Recognition error for face: {e}")
+                print(f"❌ Recognition error for face #{i + 1}: {e}")
+                socketio.emit('unrecognized_face', {
+                    'box': [x, y, w, h],
+                    'error': str(e)
+                })
                 continue
 
         if not faces_processed:
-            print("No faces successfully processed")
+            print("ℹ️ No faces successfully processed to recognition stage")
 
     except Exception as e:
-        print(f"Frame processing error: {e}")
+        print(f"❌ Frame processing error: {e}")
 
     # Always emit frame_processed to unblock client
     socketio.emit('frame_processed')

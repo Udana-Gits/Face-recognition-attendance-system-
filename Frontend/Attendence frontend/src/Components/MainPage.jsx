@@ -19,16 +19,18 @@ function MainPage() {
 
   return (
     <>
-      <div className="ams-split-container">
-        <div className="ams-left-pane">
-          <img src={leftbackground} alt="Attendance System Background" />
-        </div>
-        <div className="ams-right-pane">
-          <div className="ams-button-container">
-            <button className="ams-action-button" onClick={attendencepage}>Take Attendance</button>
-            <button className="ams-action-button" onClick={regsiterPage}>Register Students</button>
-            <button className="ams-action-button" onClick={removestudentpage}>Remove Students</button>
-            <button className="ams-action-button" onClick={attendencepage}>Manage Attendance</button>
+      <div class="background-img-mainpage">
+        <div className="ams-split-container-mainpage">
+          <div className="ams-left-pane-mainpage">
+            <img src={leftbackground} alt="Attendance System Background" />
+          </div>
+          <div className="ams-right-pane-mainpage">
+            <div className="ams-button-container-mainpage">
+              <button className="ams-action-button-mainpage" onClick={attendencepage}>Take Attendance</button>
+              <button className="ams-action-button-mainpage" onClick={regsiterPage}>Register Students</button>
+              <button className="ams-action-button-mainpage" onClick={removestudentpage}>Remove Students</button>
+              <button className="ams-action-button-mainpage" onClick={attendencepage}>Manage Attendance</button>
+            </div>
           </div>
         </div>
       </div>

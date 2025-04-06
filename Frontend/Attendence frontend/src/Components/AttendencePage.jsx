@@ -71,7 +71,7 @@ function AttendencePage(){
     }
     
     function goback(){
-        navigate('/mainpage')
+        navigate('/')
     }
       
     return(
