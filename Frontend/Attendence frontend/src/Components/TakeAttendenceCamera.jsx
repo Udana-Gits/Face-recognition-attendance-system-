@@ -7,10 +7,8 @@ function TakeAttendenceCamera() {
     const [socket, setSocket] = useState(null);
     const [running, setRunning] = useState(false);
     const [attendanceList, setAttendanceList] = useState([]);
-    // Modified to track attendance by intake/course instead of debug info
-    const [attendanceSummary, setAttendanceSummary] = useState({
-        // Example format: { "intake 40 computer science": 4, "intake 39 software engineering": 3 }
-    });
+    // Modified to track attendance by user-selected intake/course combinations
+    const [attendanceSummary, setAttendanceSummary] = useState({});
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const videoStreamRef = useRef(null);
@@ -25,6 +23,7 @@ function TakeAttendenceCamera() {
     const pendingFramesRef = useRef(0); // Track pending frame requests
     const maxPendingFrames = 2; // Don't send more frames if we have this many pending
 
+    // Get selected intakes and courses from location state
     const { selectedOptionsIntake, selectedOptionsCourse } = location.state || {};
 
     useEffect(() => {
@@ -47,26 +46,67 @@ function TakeAttendenceCamera() {
             
             if (data.type === 'recognition' && runningRef.current) {
                 const { name, similarity, box } = data;
-                const [studentName, studentId] = name.split('_');
-                const currentTime = new Date().toLocaleTimeString();
-    
-                setAttendanceList(prevList => {
-                    if (!prevList.some(s => s.id === studentId)) {
-                        // Extract intake and course from student data
-                        // This assumes the studentId contains or can map to intake/course info
-                        // You may need to adjust this based on your actual data structure
-                        const studentIntakeCourse = extractIntakeCourse(name, studentId);
+                console.log(`Recognition event: ${name}, similarity: ${similarity}`);
+                
+                // Only process if similarity is at least 75%
+                if (similarity >= 0.75) {
+                    // Parse the name to extract student information
+                    // Expected format: "{name}_{studentId}"
+                    const nameParts = name.split('_');
+                    const studentId = nameParts.pop(); // Extract the last part as ID
+                    const studentName = nameParts.join('_'); // Rejoin the rest as name
+                    const currentTime = new Date().toLocaleTimeString();
+                    
+                    // The file path should indicate which intake/course this student belongs to
+                    // Extract this information from the backend response or infer it
+                    // Let's assume the server returns this info or we can infer it from context
+                    const studentIntakeCourse = extractIntakeCourseFromPath(data.path || '');
+                    const formattedIntakeCourse = formatIntakeCourse(studentIntakeCourse);
+                    console.log(`Student ${studentName} (${studentId}) belongs to ${studentIntakeCourse}`);
+                    
+                    // Check if this student belongs to a selected intake/course
+                    if (isSelectedIntakeCourse(studentIntakeCourse)) {
+                        console.log(`Adding student ${studentName} (${studentId}) to attendance list`);
                         
-                        // Update the attendance summary
-                        updateAttendanceSummary(studentIntakeCourse);
-                        
-                        return [...prevList, { id: studentId, name: studentName, time: currentTime }];
+                        // Update the attendance list - CHANGED: add new students to the end of the list
+                        setAttendanceList(prevList => {
+                            if (!prevList.some(s => s.id === studentId)) {
+                                // Update the attendance summary
+                                updateAttendanceSummary(studentIntakeCourse);
+                                
+                                // Create a completely new array with the new student at the END
+                                const newStudentEntry = { 
+                                    id: studentId, 
+                                    name: studentName, 
+                                    time: currentTime, 
+                                    intakeCourse: studentIntakeCourse,
+                                    formattedIntakeCourse: formattedIntakeCourse // Add formatted version
+                                };
+                                
+                                return [...prevList, newStudentEntry]; // Add to end of array
+                            }
+                            return prevList;
+                        });
+                    } else {
+                        console.log(`Student ${studentName} does not match selected intake/course criteria`);
                     }
-                    return prevList;
-                });
-    
-                // Update tracking with the latest face position
-                updateTrackedFace(studentId, box, studentName, 'recognized', similarity);
+                    
+                    // Always update tracking with the latest face position
+                    updateTrackedFace(studentId, box, studentName, 'recognized', similarity);
+                } else {
+                    // Handle as below threshold match if below 75%
+                    console.log(`Similarity ${similarity} below threshold, treating as below threshold match`);
+                    const nameParts = name.split('_');
+                    const studentId = nameParts.pop(); // Extract the last part as ID
+                    const studentName = nameParts.join('_'); // Rejoin the rest as name
+                    updateTrackedFace(
+                        `threshold_${studentId || Date.now()}`, 
+                        box, 
+                        `${studentName || 'Unknown'}`, 
+                        'belowThreshold',
+                        similarity
+                    );
+                }
             }
         });
 
@@ -88,7 +128,9 @@ function TakeAttendenceCamera() {
         newSocket.on('below_threshold_match', (data) => {
             console.log(`Below threshold match: ${JSON.stringify(data)}`);
             const { name, similarity, box, threshold } = data;
-            const [studentName, studentId] = name.split('_');
+            const nameParts = name.split('_');
+            const studentId = nameParts.pop(); // Extract the last part as ID
+            const studentName = nameParts.join('_'); // Rejoin the rest as name
             
             updateTrackedFace(
                 `threshold_${studentId || Date.now()}`, 
@@ -111,61 +153,159 @@ function TakeAttendenceCamera() {
         };
     }, []);
 
-    // Helper function to extract intake and course from student data
-    // This is a placeholder - you'll need to adapt this based on your data structure
-    const extractIntakeCourse = (name, studentId) => {
-        // For demonstration, we're using sample data
-        // In a real app, you would determine this from the student records
+    // NEW: Format intake and course to shorter format (40-CS)
+    const formatIntakeCourse = (intakeCourse) => {
+        // Format should handle cases like "intake 40 software engineering" -> "40-SE"
+        const parts = intakeCourse.split(' ');
+        let intakeNumber = '';
+        let courseShort = '';
         
-        // This is just example logic - replace with actual logic
-        const firstDigit = studentId.toString().charAt(0);
-        if (parseInt(firstDigit) % 2 === 0) {
-            return "intake 40 computer science";
-        } else {
-            return "intake 39 software engineering";
+        // Extract intake number
+        for (let i = 0; i < parts.length; i++) {
+            // Look for numeric part which would be the intake number
+            if (/^\d+$/.test(parts[i])) {
+                intakeNumber = parts[i];
+                break;
+            }
         }
+        
+        // If we didn't find a numeric part, use first part
+        if (!intakeNumber && parts.length > 0) {
+            intakeNumber = parts[0];
+        }
+        
+        // Extract course and create abbreviation
+        const courseWords = parts.filter(p => !(/^\d+$/.test(p)) && p.toLowerCase() !== 'intake');
+        if (courseWords.length > 0) {
+            // Create acronym from first letter of each word
+            courseShort = courseWords.map(word => word[0].toUpperCase()).join('');
+        } else {
+            courseShort = "N/A";
+        }
+        
+        return `${intakeNumber}-${courseShort}`;
+    };
+
+    // Updated: Extract intake and course from path (expected format: "Students/{intake}/{course}/{name}_{id}.npy")
+    const extractIntakeCourseFromPath = (path) => {
+        // If we don't have path information, use other methods to determine intake/course
+        if (!path) {
+            // This is a fallback method if the path isn't available
+            // Try to check if the student belongs to the selected intakes/courses
+            // We'll just return a default value that matches one of the selected options
+            if (selectedOptionsIntake && selectedOptionsIntake.length > 0 &&
+                selectedOptionsCourse && selectedOptionsCourse.length > 0) {
+                return `${selectedOptionsIntake[0]} ${selectedOptionsCourse[0]}`;
+            }
+            return "Unknown intake Unknown course";
+        }
+        
+        // Split the path to extract intake and course
+        const parts = path.split('/');
+        if (parts.length >= 3) {
+            // Format should be like "Students/intake 40/software engineering/name_id.npy"
+            const intake = parts[parts.length - 3];
+            const course = parts[parts.length - 2];
+            return `${intake} ${course}`;
+        }
+        
+        return "Unknown intake Unknown course";
+    };
+
+    // Updated: Check if student belongs to one of the selected intake/course combinations
+    const isSelectedIntakeCourse = (studentIntakeCourse) => {
+        console.log("Checking if student belongs to selected intake/course:", studentIntakeCourse);
+        console.log("Selected intakes:", selectedOptionsIntake);
+        console.log("Selected courses:", selectedOptionsCourse);
+        
+        if (!selectedOptionsIntake || !selectedOptionsCourse || 
+            selectedOptionsIntake.length === 0 || selectedOptionsCourse.length === 0) {
+            console.log("No selected options, rejecting student");
+            return false;
+        }
+        
+        // Split the intake and course
+        const parts = studentIntakeCourse.split(' ');
+        if (parts.length < 2) {
+            console.log("Invalid intake/course format, rejecting student");
+            return false;
+        }
+        
+        // Extract intake and course parts
+        // We need to handle various possible formats from the path extraction
+        let intake = "", course = "";
+        
+        // First word is the intake category (e.g., "intake")
+        // Second word is the intake number (e.g., "40")
+        // Rest is the course name (e.g., "software engineering")
+        if (parts[0].toLowerCase() === "intake") {
+            intake = `${parts[0]} ${parts[1]}`;
+            course = parts.slice(2).join(' ');
+        } else {
+            // If format is different, try to match the first part as intake and rest as course
+            intake = parts[0];
+            course = parts.slice(1).join(' ');
+        }
+        
+        console.log(`Parsed: intake="${intake}", course="${course}"`);
+        
+        // Check if both the intake and course were selected by the user
+        const intakeSelected = selectedOptionsIntake.some(
+            selectedIntake => selectedIntake.toLowerCase() === intake.toLowerCase()
+        );
+        
+        const courseSelected = selectedOptionsCourse.some(
+            selectedCourse => selectedCourse.toLowerCase() === course.toLowerCase()
+        );
+        
+        console.log(`Intake selected: ${intakeSelected}, Course selected: ${courseSelected}`);
+        
+        return intakeSelected && courseSelected;
     };
 
     // Update attendance summary count when a new student is recognized
+    // Improved updateAttendanceSummary function
     const updateAttendanceSummary = (intakeCourse) => {
+        console.log(`Updating attendance summary for ${intakeCourse}`);
+        
+        // Get the current attendance count for this intake/course
+        const currentCount = attendanceList.filter(
+            student => student.intakeCourse === intakeCourse
+        ).length;
+        
+        // Now we're setting the exact count based on the attendance list
+        // This ensures the summary always matches the actual list
         setAttendanceSummary(prev => {
             const newSummary = {...prev};
-            if (newSummary[intakeCourse]) {
-                newSummary[intakeCourse] += 1;
-            } else {
-                newSummary[intakeCourse] = 1;
-            }
+            newSummary[intakeCourse] = currentCount + 1; // +1 because the new student isn't in the list yet
+            console.log(`Set count for ${intakeCourse} to ${newSummary[intakeCourse]}`);
             return newSummary;
         });
     };
 
+    // Helper function to check if two face boxes represent the same face
+    const isSameFace = (box1, box2) => {
+        // Calculate centers of both boxes
+        const center1 = {
+            x: box1[0] + box1[2]/2,
+            y: box1[1] + box1[3]/2
+        };
+        const center2 = {
+            x: box2[0] + box2[2]/2,
+            y: box2[1] + box2[3]/2
+        };
+        
+        // Calculate distance between centers
+        const distance = Math.sqrt(
+            Math.pow(center1.x - center2.x, 2) + 
+            Math.pow(center1.y - center2.y, 2)
+        );
+        
+        // If centers are close enough, consider it the same face
+        return distance < 30; 
+    };
+
     // Update tracked face data
-    // In TakeAttendenceCamera.jsx - modify the updateTrackedFace function
-
-// First, add this helper function above updateTrackedFace
-const isSameFace = (box1, box2) => {
-    // Calculate centers of both boxes
-    const center1 = {
-        x: box1[0] + box1[2]/2,
-        y: box1[1] + box1[3]/2
-    };
-    const center2 = {
-        x: box2[0] + box2[2]/2,
-        y: box2[1] + box2[3]/2
-    };
-    
-    // Calculate distance between centers
-    const distance = Math.sqrt(
-        Math.pow(center1.x - center2.x, 2) + 
-        Math.pow(center1.y - center2.y, 2)
-    );
-    
-    // If centers are close enough, consider it the same face
-    // Adjust threshold based on your needs
-    return distance < 30; 
-};
-
-// Then modify updateTrackedFace function
     const updateTrackedFace = (id, box, name, status = 'recognized', similarity = 0) => {
         const now = Date.now();
         
@@ -374,7 +514,10 @@ const isSameFace = (box1, box2) => {
     };
     
     const startDetection = async () => {
-        if (!selectedOptionsIntake || !selectedOptionsCourse) return;
+        if (!selectedOptionsIntake || !selectedOptionsCourse || selectedOptionsIntake.length === 0 || selectedOptionsCourse.length === 0) {
+            alert("Please select intake and course options first");
+            return;
+        }
     
         try {
             // Request camera with specific constraints for better performance
@@ -397,22 +540,27 @@ const isSameFace = (box1, box2) => {
                 canvas.width = videoRef.current.clientWidth;
                 canvas.height = videoRef.current.clientHeight;
                 
-                // Reset attendance summary
-                setAttendanceSummary({});
+                // Reset attendance list and summary
+                setAttendanceList([]);
                 
-                // Initialize with sample data for demonstration
-                // Replace this with actual data loading in your production code
-                setAttendanceSummary({
-                    "intake 40 computer science": 0,
-                    "intake 39 software engineering": 0
+                // Initialize the attendance summary with selected intake/course combinations
+                const initialSummary = {};
+                
+                // Create a key for each combination of intake and course the user selected
+                selectedOptionsIntake.forEach(intake => {
+                    selectedOptionsCourse.forEach(course => {
+                        initialSummary[`${intake} ${course}`] = 0;
+                    });
                 });
+                
+                setAttendanceSummary(initialSummary);
                 
                 // Inform server to prepare recognition resources
                 socket.emit('start_recognition', { 
                     intake: selectedOptionsIntake, 
                     course: selectedOptionsCourse 
                 }, (res) => {
-                    if (res.status === 'success') {
+                    if (res && res.status === 'success') {
                         setRunning(true);
                         runningRef.current = true;
                         pendingFramesRef.current = 0;
@@ -426,6 +574,9 @@ const isSameFace = (box1, box2) => {
                                 }
                             }
                         }, 50);
+                    } else {
+                        console.error("Failed to start recognition:", res);
+                        alert("Failed to start recognition. Check console for details.");
                     }
                 });
             };
@@ -464,10 +615,12 @@ const isSameFace = (box1, box2) => {
         // Increment pending frames counter
         pendingFramesRef.current++;
         
-        // Send to server
+        // Send to server with selected intake/course information
         socket.emit('process_frame', { 
             image: imageData,
-            timestamp: Date.now() // Add timestamp for tracking latency
+            timestamp: Date.now(), // Add timestamp for tracking latency
+            selectedIntakes: selectedOptionsIntake,
+            selectedCourses: selectedOptionsCourse
         });
         
         // Always update the canvas for smooth experience
@@ -513,10 +666,15 @@ const isSameFace = (box1, box2) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    // Format intake and course for display in summary
+    const formatSummaryKey = (intakeCourse) => {
+        return formatIntakeCourse(intakeCourse);
+    };
+
     return (
-        <div className="split-container">
-            <div className="left-pane">
-                <div className="camera_canvas">
+        <div className="split-container-attendencecamera">
+            <div className="left-pane-attendencecamera">
+                <div className="camera_canvas-attendencecamera">
                     <video 
                         ref={videoRef} 
                         width="600" 
@@ -531,15 +689,15 @@ const isSameFace = (box1, box2) => {
                         height="480" 
                     />
                 </div>
-                <div className="control-buttons">
+                <div className="control-buttons-attendencecamera">
                     <button onClick={startDetection} disabled={running}>Start Recognition</button>
                     <button onClick={stopDetection} disabled={!running}>Stop Recognition</button>
                     <button onClick={goBack}>Back</button>
                 </div>
-                <div className="attendance-summary" style={{marginTop: '10px', backgroundColor: '#f5f5f5',color:'#2F4B4E', padding: '10px', borderRadius: '5px'}}>
-                    <h3>Today's Attendance by Intake/Course</h3>
+                <div className="attendance-summary-attendencecamera" style={{marginTop: '10px', backgroundColor: '#f5f5f5',color:'#2F4B4E', padding: '10px', borderRadius: '5px'}}>
+                    <h3>Today's Attendance by Selected Intake/Course</h3>
                     {Object.entries(attendanceSummary).length > 0 ? (
-                        <table className="summary-table" style={{width: '100%', borderCollapse: 'collapse'}}>
+                        <table className="summary-table-attendencecamera" style={{width: '100%', borderCollapse: 'collapse'}}>
                             <thead>
                                 <tr>
                                     <th style={{textAlign: 'left', padding: '8px', borderBottom: '1px solid #ddd'}}>Intake & Course</th>
@@ -549,7 +707,7 @@ const isSameFace = (box1, box2) => {
                             <tbody>
                                 {Object.entries(attendanceSummary).map(([intakeCourse, count], index) => (
                                     <tr key={index}>
-                                        <td style={{padding: '8px', borderBottom: '1px solid #ddd'}}>{intakeCourse}</td>
+                                        <td style={{textAlign: 'left', apadding: '8px', borderBottom: '1px solid #ddd'}}>{intakeCourse}</td>
                                         <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #ddd'}}>{count}</td>
                                     </tr>
                                 ))}
@@ -561,15 +719,16 @@ const isSameFace = (box1, box2) => {
                     
                 </div>
             </div>
-            <div className="right-pane">
+            <div className="right-pane-attendencecamera">
                 <h2>Attendance List</h2>
-                
-                <table className="attendence_table">
+                <div className="attendance-table-wrapper-attendencecamera">
+                <table className="attendence_table-attendencecamera" style={{width: '100%', borderCollapse: 'collapse'}}>
                     <thead>
                         <tr>
                             <th>Student ID</th>
                             <th>Name</th>
                             <th>Time</th>
+                            <th>Intake & Course</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -579,15 +738,17 @@ const isSameFace = (box1, box2) => {
                                     <td>{s.id}</td>
                                     <td>{s.name}</td>
                                     <td>{s.time}</td>
+                                    <td>{s.formattedIntakeCourse || formatIntakeCourse(s.intakeCourse)}</td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="3" style={{textAlign: 'center'}}>No students detected yet</td>
+                                <td colSpan="4" style={{textAlign: 'center'}}>No students detected yet</td>
                             </tr>
                         )}
                     </tbody>
                 </table>
+                </div>
                 <p>Total Students: {attendanceList.length}</p>
             </div>
         </div>
