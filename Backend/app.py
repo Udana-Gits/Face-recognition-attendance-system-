@@ -10,6 +10,7 @@ import cv2
 import io
 import time
 import threading
+import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_socketio import SocketIO
@@ -18,6 +19,7 @@ from deepface import DeepFace
 from mtcnn import MTCNN
 from PIL import Image
 from numpy.linalg import norm
+from datetime import datetime
 
 detector = MTCNN()
 
@@ -239,7 +241,6 @@ def load_embeddings_for_courses(intakes, courses):
 
     for intake_item in intakes:
         for course_item in courses:
-            # Extract the string from each item if it's a list
             intake = intake_item[0] if isinstance(intake_item, list) else intake_item
             course = course_item[0] if isinstance(course_item, list) else course_item
 
@@ -250,7 +251,6 @@ def load_embeddings_for_courses(intakes, courses):
                         name = file.replace('.npy', '')
                         try:
                             embedding = np.load(os.path.join(path, file))
-                            # Normalize embedding for faster comparison later
                             embedding = embedding / np.linalg.norm(embedding)
                             loaded_embeddings[name] = embedding
                             count += 1
@@ -498,9 +498,9 @@ def process_frame(data):
                     # Smaller faces (further away) may need a lower threshold
                     threshold = 0.75
                     if w < 30:  # Far faces
-                        threshold = 0.72  # Slightly more forgiving for distant faces
+                        threshold = 0.72
 
-                    # Check if similarity is below threshold but emit anyway for debugging
+
                     if best_similarity <= threshold:
                         print(
                             f"⚠️ Face #{i + 1} - Best match below threshold: {best_match} ({best_similarity:.4f} < {threshold})")
@@ -570,6 +570,267 @@ def stop_recognition():
     global recent_recognitions
     recent_recognitions = {}
     return {'status': 'success', 'message': 'Recognition stopped'}
+
+
+
+@app.route('/save_attendance', methods=['POST'])
+def save_attendance():
+    data = request.get_json()
+    intake = data['intake']
+    course = data['course']
+    subject = data['subject']
+    attendance_list = data['attendanceList']
+    today = date.today().strftime('%d-%m-%Y')
+
+    folder_path = f"../Students/{intake}/{course}/attendence"
+    os.makedirs(folder_path, exist_ok=True)
+
+    file_name = f"{intake} {course} {subject} attendence.xlsx"
+    file_path = os.path.join(folder_path, file_name)
+
+    # Convert list of students into a dict keyed by ID for easier update
+    present_ids = {student['id']: student['name'] for student in attendance_list}
+
+    if os.path.exists(file_path):
+        df = pd.read_excel(file_path)
+    else:
+        df = pd.DataFrame(columns=["StudentID", "Name"])
+
+    # Ensure 'StudentID' is string
+    df['StudentID'] = df['StudentID'].astype(str)
+
+    # Mark attendance
+    for index, row in df.iterrows():
+        student_id = str(row['StudentID'])
+        df.at[index, today] = '✅' if student_id in present_ids else '❌'
+
+    # Add new students if not already in the sheet
+    for student_id, name in present_ids.items():
+        if not (df['StudentID'] == student_id).any():
+            new_row = {
+                "StudentID": student_id,
+                "Name": name,
+                today: '✅'
+            }
+            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+
+    df.to_excel(file_path, index=False)
+    return jsonify({"message": "Attendance saved successfully!"})
+
+
+# Add this route to your Flask backend (app.js)
+
+@app.route('/api/attendance/student/<student_id>', methods=['GET'])
+def get_student_attendance(student_id):
+    intake = request.args.get('intake')
+    course = request.args.get('course')
+
+    if not intake or not course:
+        return jsonify({"error": "Both intake and course are required"}), 400
+
+    folder_path = f"../Students/{intake}/{course}/attendence"
+
+    # Check if folder exists
+    if not os.path.exists(folder_path):
+        return jsonify({"error": f"No data found for {intake} {course}"}), 404
+
+    # Get all attendance Excel files for this intake and course
+    attendance_files = [f for f in os.listdir(folder_path) if f.endswith('.xlsx') and 'attendence' in f]
+
+    if not attendance_files:
+        return jsonify({"error": "No attendance records found"}), 404
+
+    student_name = ""
+    subjects_data = []
+
+    # Process each attendance file (representing a subject)
+    for file_name in attendance_files:
+        file_path = os.path.join(folder_path, file_name)
+
+        # Extract subject name from file name
+        # Format: "intake course subject attendence.xlsx"
+        parts = file_name.split(" ")
+        if len(parts) < 3:
+            continue  # Skip if filename format doesn't match expected pattern
+
+        # Extract subject name (all parts except intake, course, and "attendence.xlsx")
+        subject_name = " ".join(parts[2:-1])  # Skip intake, course, and "attendence.xlsx"
+
+        try:
+            df = pd.read_excel(file_path)
+
+            # Ensure 'StudentID' is string
+            df['StudentID'] = df['StudentID'].astype(str)
+
+            # Find the student in the Excel file
+            student_row = df[df['StudentID'] == student_id]
+
+            if student_row.empty:
+                # Student not found in this subject
+                subjects_data.append({
+                    "name": subject_name,
+                    "percentage": 0
+                })
+                continue
+
+            # Get student name if not already set
+            if not student_name and 'Name' in student_row.columns:
+                student_name = student_row['Name'].iloc[0]
+
+            # Calculate attendance percentage
+            date_columns = [col for col in df.columns if col not in ['StudentID', 'Name']]
+
+            if not date_columns:
+                subjects_data.append({
+                    "name": subject_name,
+                    "percentage": 0
+                })
+                continue
+
+            present_count = 0
+            for date_col in date_columns:
+                if student_row[date_col].iloc[0] == '✅':
+                    present_count += 1
+
+            attendance_percentage = (present_count / len(date_columns)) * 100
+
+            subjects_data.append({
+                "name": subject_name,
+                "percentage": attendance_percentage
+            })
+
+        except Exception as e:
+            print(f"Error processing {file_name}: {str(e)}")
+            # Continue with other files even if one fails
+
+    return jsonify({
+        "name": student_name,
+        "subjects": subjects_data
+    })
+
+
+@app.route('/api/intakes', methods=['GET'])
+def get_intakes():
+    # Return the list of intakes based on folder structure
+    try:
+        base_dir = "../Students"
+        intakes = [folder for folder in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, folder))]
+        return jsonify(intakes)
+    except Exception as e:
+        print(f"Error getting intakes: {str(e)}")
+        return jsonify([])
+
+
+@app.route('/api/courses', methods=['GET'])
+def get_courses():
+    intake = request.args.get('intake')
+    if not intake:
+        return jsonify({"error": "Intake parameter is required"}), 400
+
+    try:
+        base_dir = f"../Students/{intake}"
+        if not os.path.exists(base_dir):
+            return jsonify([])
+
+        courses = [folder for folder in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, folder))]
+        return jsonify(courses)
+    except Exception as e:
+        print(f"Error getting courses: {str(e)}")
+        return jsonify([])
+
+
+@app.route('/api/attendance/intake/<intake>/course/<course>', methods=['GET'])
+def get_intake_attendance(intake, course):
+    folder_path = f"../Students/{intake}/{course}/attendence"
+
+    # Check if folder exists
+    if not os.path.exists(folder_path):
+        return jsonify({"error": f"No data found for {intake} {course}"}), 404
+
+    # Get all attendance Excel files for this intake and course
+    attendance_files = [f for f in os.listdir(folder_path) if f.endswith('.xlsx') and 'attendence' in f]
+
+    if not attendance_files:
+        return jsonify({"error": "No attendance records found"}), 404
+
+    # Dictionary to store student attendance data by subject
+    students_data = {}
+
+    # Dictionary to store daily attendance counts for graph
+    graph_data = {}
+
+    # Process each attendance file (representing a subject)
+    for file_name in attendance_files:
+        file_path = os.path.join(folder_path, file_name)
+
+        # Extract subject name from file name
+        parts = file_name.split(" ")
+        if len(parts) < 3:
+            continue
+
+        subject_name = " ".join(parts[2:-1])
+
+        try:
+            df = pd.read_excel(file_path)
+
+            # Ensure 'StudentID' is string
+            df['StudentID'] = df['StudentID'].astype(str)
+
+            # Get date columns (all columns except 'StudentID' and 'Name')
+            date_columns = [col for col in df.columns if col not in ['StudentID', 'Name']]
+
+            # Process each student's attendance for this subject
+            for _, row in df.iterrows():
+                student_id = row['StudentID']
+                student_name = row['Name'] if 'Name' in row else "Unknown"
+
+                # Initialize student record if not exists
+                if student_id not in students_data:
+                    students_data[student_id] = {
+                        "id": student_id,
+                        "name": student_name,
+                        "subjects": {}
+                    }
+
+                # Calculate attendance percentage for this subject
+                present_count = 0
+                for date_col in date_columns:
+                    if row[date_col] == '✅':
+                        present_count += 1
+
+                        # Update graph data for this date and subject
+                        if date_col not in graph_data:
+                            graph_data[date_col] = {}
+
+                        if subject_name not in graph_data[date_col]:
+                            graph_data[date_col][subject_name] = 0
+
+                        graph_data[date_col][subject_name] += 1
+
+                attendance_percentage = (present_count / len(date_columns)) * 100 if date_columns else 0
+                students_data[student_id]["subjects"][subject_name] = attendance_percentage
+
+        except Exception as e:
+            print(f"Error processing {file_name}: {str(e)}")
+
+    # Format graph data for charting
+    formatted_graph_data = []
+    for date, subjects in graph_data.items():
+        date_entry = {"date": date}
+        date_entry.update(subjects)
+        formatted_graph_data.append(date_entry)
+
+    # Sort graph data by date
+    formatted_graph_data.sort(key=lambda x: x["date"])
+
+    return jsonify({
+        "studentsData": list(students_data.values()),
+        "graphData": formatted_graph_data
+    })
+
+
+
+
 
 
 if __name__ == '__main__':

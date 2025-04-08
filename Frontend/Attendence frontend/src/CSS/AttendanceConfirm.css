@@ -1,0 +1,137 @@
+/* AttendanceConfirm.css */
+/* Matching the style of AttendancePage.css */
+
+.attendance-confirm-container {
+    width: 100vw;
+    min-height: 100vh;
+    margin: 0;
+    padding: 2rem;
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    overflow-y: auto;
+  
+    background-image: url('../Images/t5.png'); /* Use the same background as the attendance page */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  
+  .attendance-confirm-title {
+    text-align: center;
+    color: #2F4B4E;
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+    font-weight: 700;
+    font-family: gagalin;
+  }
+  
+  .attendance-confirm-form {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: #2F4B4E;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    color: #FFFFFF;
+  }
+  
+  .attendance-confirm-field {
+    margin-bottom: 1.5rem;
+  }
+  
+  .attendance-confirm-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+  }
+  
+  .attendance-confirm-input,
+  .attendance-confirm-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+  
+  .attendance-confirm-input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+  }
+  
+  .attendance-confirm-input:focus,
+  .attendance-confirm-select:focus {
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+  
+  .attendance-confirm-select option {
+    background-color: #2F4B4E;
+    color: #FFFFFF;
+  }
+  
+  .attendance-confirm-summary {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 5px;
+    margin: 1.5rem 0;
+  }
+  
+  .attendance-confirm-detail {
+    margin: 0.5rem 0;
+  }
+  
+  .attendance-confirm-buttons {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+  
+  .attendance-confirm-submit-button {
+    padding: 0.75rem 2rem;
+    background-color: #f8f9fa;
+    color: #2F4B4E;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    min-width: 200px;
+  }
+  
+  .attendance-confirm-submit-button:hover {
+    background-color: #FFFFFF;
+    transform: translateY(-2px);
+  }
+  
+  .attendance-confirm-submit-button:disabled {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .attendance-confirm-form {
+      padding: 1.5rem;
+      width: 90%;
+    }
+    
+    .attendance-confirm-submit-button {
+      width: 100%;
+    }
+  }
