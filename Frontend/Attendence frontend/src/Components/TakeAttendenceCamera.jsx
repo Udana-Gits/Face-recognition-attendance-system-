@@ -80,10 +80,10 @@ function TakeAttendenceCamera() {
                                     name: studentName, 
                                     time: currentTime, 
                                     intakeCourse: studentIntakeCourse,
-                                    formattedIntakeCourse: formattedIntakeCourse // Add formatted version
+                                    formattedIntakeCourse: formattedIntakeCourse 
                                 };
                                 
-                                return [...prevList, newStudentEntry]; // Add to end of array
+                                return [...prevList, newStudentEntry]; 
                             }
                             return prevList;
                         });
@@ -466,7 +466,7 @@ function TakeAttendenceCamera() {
             ctx.fillStyle = '#FFFFFF';
             ctx.fillText(nameText, boxX + 10, labelY - 7);
             
-            // Add similarity if available (but only above the box, not inside)
+
             if (face.similarity) {
                 const similarityText = `${(face.similarity * 100).toFixed(1)}%`;
                 ctx.font = 'bold 14px Arial';
@@ -652,6 +652,17 @@ function TakeAttendenceCamera() {
         navigate('/attendencepage');
     };
 
+    const navigateConfirmAttendance = () => {
+        stopDetection();
+        navigate('/attendanceconfirm', {
+            state: {
+                attendanceList,
+                selectedOptionsIntake,
+                selectedOptionsCourse
+            }
+        });
+    };
+
     // Handle window resize
     useEffect(() => {
         const handleResize = () => {
@@ -749,7 +760,10 @@ function TakeAttendenceCamera() {
                     </tbody>
                 </table>
                 </div>
-                <p>Total Students: {attendanceList.length}</p>
+                <p style={{textAlign: 'left'}}>Total Students: {attendanceList.length}</p>
+                <div className="control-buttons-attendencecamera">
+                    <button onClick={navigateConfirmAttendance}>Submit Attendance</button>
+                </div>
             </div>
         </div>
     );

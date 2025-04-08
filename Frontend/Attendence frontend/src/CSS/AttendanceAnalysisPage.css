@@ -1,0 +1,276 @@
+/* Reset for full background coverage - carried over from AttendencePage.css */
+html, body, #root {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+  }
+  
+  /* Main container styles - with proper scrolling */
+  .attendance-analysis-page {
+    width: 100vw;
+    min-height: 100vh;
+    margin: 0;
+    padding: 2rem;
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    overflow-y: auto; /* Enable vertical scrolling */
+    background-image: url('../Images/t5.png'); /* Replace with your image path */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    max-width: none; /* Override inline style */
+  }
+  
+  /* Page header */
+  .attendance-analysis-page h2 {
+    text-align: center;
+    color: #2F4B4E;
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+    font-weight: 700;
+    font-family: gagalin;
+  }
+  
+  /* Error message styling */
+  .error-message {
+    background-color: rgba(255, 240, 240, 0.9);
+    color: #d32f2f;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border-left: 4px solid #d32f2f;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Loading indicator */
+  .loading {
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+    color: #666;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    margin: 1rem 0;
+  }
+  
+  /* Search container - holds both search sections */
+  .search-container {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    gap: 20px;
+    width: 100%;
+    color:#2F4B4E
+  }
+  
+  /* Search section panels - styling consistent with AttendencePage.css panels */
+  .student-search-section, .intake-search-section {
+    flex: 1;
+    padding: 1.5rem;
+    background-color: #2F4B4E;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    min-height: 200px;
+  }
+  
+  /* Section headers */
+  .student-search-section h3, .intake-search-section h3 {
+    color: #FFFFFF;
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+  }
+  
+  /* Search form elements container */
+  .search-box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  /* Form controls styling */
+  .search-box input, .search-box select {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: #ffffff;
+  }
+  
+  .search-box input:focus, .search-box select:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+  }
+  
+  /* Button styling - matching AttendencePage.css */
+  .search-box button {
+    padding: 0.75rem 1rem;
+    background-color: #FFFFFF;
+    color: #2F4B4E;
+    border: 1px solid #FFFFFF;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    margin-top: 0.5rem;
+  }
+  
+  .search-box button:hover:not(:disabled) {
+    background-color: #2F4B4E;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+    border: 1px solid #FFFFFF;
+  }
+  
+  .search-box button:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+    border: 1px solid #cccccc;
+  }
+  
+  /* Results container */
+  .results-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding-bottom: 50px;
+  }
+  
+  /* Tables styling */
+  .attendance-table-container {
+    width: 100%;
+    margin-bottom: 30px;
+    overflow-x: auto;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .attendance-table-container h3 {
+    color: #2F4B4E;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .attendance-table-container h4 {
+    color: #2F4B4E;
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .attendance-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+  
+  .attendance-table th, .attendance-table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+  }
+  
+  .attendance-table th {
+    background-color: #2F4B4E;
+    color: #FFFFFF;
+    font-weight: 600;
+  }
+  
+  .attendance-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+  
+  .attendance-table tr:hover {
+    background-color: #e9ecef;
+  }
+  
+  /* Graphs container */
+  .attendance-graphs-container {
+    width: 100%;
+    margin-top: 30px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .attendance-graphs-container h3 {
+    color: #2F4B4E;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  .graph-wrapper {
+    width: 100%;
+    height: 400px;
+    margin-top: 20px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #fff;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Fix text color and background for inputs and selects */
+.search-box input,
+.search-box select {
+  color: #2F4B4E;
+  background-color: #ffffff;
+}
+
+/* Dropdown <option> text color */
+.search-box select option {
+  color: #2F4B4E;
+  background-color: #ffffff;
+}
+
+/* Optional: Change dropdown hover color (some browsers may not support this fully) */
+.search-box select option:hover {
+  background-color: #d0e4e4;
+  color: #2F4B4E;
+}
+
+  
+  /* Responsive styling for mobile */
+  @media (max-width: 768px) {
+    .attendance-analysis-page {
+      padding: 1rem;
+    }
+    
+    .search-container {
+      flex-direction: column;
+    }
+    
+    .student-search-section, .intake-search-section {
+      width: 100%;
+    }
+    
+    .attendance-analysis-page h2 {
+      font-size: 2rem;
+    }
+    
+    .attendance-table-container {
+      padding: 1rem;
+    }
+    
+    .attendance-table th, .attendance-table td {
+      padding: 8px 10px;
+      font-size: 0.9rem;
+    }
+  }

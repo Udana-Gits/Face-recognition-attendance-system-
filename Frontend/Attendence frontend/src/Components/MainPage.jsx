@@ -16,6 +16,9 @@ function MainPage() {
   function removestudentpage(){
     navigate('/removestudentpage')
   }
+  function attendanceanalysispage(){
+    navigate('/attendanceanalysispage')
+  }
 
   return (
     <>
@@ -29,7 +32,7 @@ function MainPage() {
               <button className="ams-action-button-mainpage" onClick={attendencepage}>Take Attendance</button>
               <button className="ams-action-button-mainpage" onClick={regsiterPage}>Register Students</button>
               <button className="ams-action-button-mainpage" onClick={removestudentpage}>Remove Students</button>
-              <button className="ams-action-button-mainpage" onClick={attendencepage}>Manage Attendance</button>
+              <button className="ams-action-button-mainpage" onClick={attendanceanalysispage}>Manage Attendance</button>
             </div>
           </div>
         </div>

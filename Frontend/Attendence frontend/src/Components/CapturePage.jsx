@@ -26,7 +26,8 @@ function CapturePage() {
       images.push(imageData)
       
       setCaptureProgress(Math.round(((i + 1) / 30) * 100))
-      await new Promise((resolve) => setTimeout(resolve, 150)) // wait between frames
+      // to wait between frames to get diffrent actions and lighting confitions 
+      await new Promise((resolve) => setTimeout(resolve, 150)) 
     }
   
     setCapturedImages(images)
