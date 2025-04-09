@@ -350,19 +350,37 @@ const AttendanceAnalysisPage = () => {
     );
   };
 
-  // Render function for attendance graphs
+  // Render function for attendance graphs - FIXED VERSION
   const renderAttendanceGraphs = () => {
+    // Enhanced logging for debugging
+    console.log("Attendance Graph Data:", attendanceGraphData);
+    
+    // Check if data exists and has proper structure
     if (!attendanceGraphData || !Array.isArray(attendanceGraphData) || attendanceGraphData.length === 0) {
+      console.log("No graph data available");
       return null;
     }
 
     // Get all subject keys except 'date'
     const firstDay = attendanceGraphData[0] || {};
+    console.log("First day data:", firstDay);
+    
     const subjects = Object.keys(firstDay).filter(key => key !== 'date');
+    console.log("Subject keys for graph:", subjects);
     
     if (subjects.length === 0) {
+      console.log("No subjects found in graph data");
       return null;
     }
+
+    // Generate colors for bars
+    const getBarColor = (index) => {
+      const colors = [
+        '#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', 
+        '#00C49F', '#FFBB28', '#FF8042', '#a4de6c', '#d0ed57'
+      ];
+      return colors[index % colors.length];
+    };
 
     return (
       <div className="attendance-graphs-container">
@@ -379,16 +397,20 @@ const AttendanceAnalysisPage = () => {
                 angle={-45} 
                 textAnchor="end"
                 height={80}
+                tick={{ fontSize: 12 }}
               />
-              <YAxis label={{ value: 'Number of Students', angle: -90, position: 'insideLeft' }} />
+              <YAxis 
+                label={{ value: 'Number of Students', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }}
+                allowDecimals={false}
+              />
               <Tooltip />
-              <Legend />
+              <Legend wrapperStyle={{ bottom: 0 }} />
               {subjects.map((subject, index) => (
                 <Bar 
-                  key={index} 
+                  key={subject} 
                   dataKey={subject} 
                   name={abbreviateSubject(subject)} 
-                  fill={`hsl(${index * 45}, 70%, 50%)`} 
+                  fill={getBarColor(index)} 
                 />
               ))}
             </BarChart>

@@ -71,10 +71,9 @@ function TakeAttendenceCamera() {
                         // Update the attendance list - CHANGED: add new students to the end of the list
                         setAttendanceList(prevList => {
                             if (!prevList.some(s => s.id === studentId)) {
-                                // Update the attendance summary
                                 updateAttendanceSummary(studentIntakeCourse);
                                 
-                                // Create a completely new array with the new student at the END
+                                
                                 const newStudentEntry = { 
                                     id: studentId, 
                                     name: studentName, 
